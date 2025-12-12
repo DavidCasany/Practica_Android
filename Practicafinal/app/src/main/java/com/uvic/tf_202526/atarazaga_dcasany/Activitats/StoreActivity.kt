@@ -6,8 +6,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import android.content.Intent
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.uvic.tf_202526.atarazaga_dcasany.Adaptadors.ProducteAdapter
 import com.uvic.tf_202526.atarazaga_dcasany.Entitats.Producte
+import com.uvic.tf_202526.atarazaga_dcasany.Entitats.ItemCarro
 import com.uvic.tf_202526.atarazaga_dcasany.R
 import com.uvic.tf_202526.atarazaga_dcasany.Apps.AppSingleton
 import kotlinx.coroutines.Dispatchers
@@ -18,52 +21,91 @@ class StoreActivity : AppCompatActivity() {
 
     private lateinit var rvProductes: RecyclerView
     private var streamerId: Int = -1
+    private var userId: Int = -1 // <--- NOU
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_store)
 
-        // Recuperem l'ID del Streamer passat per Intent
+        // 1. RECOLLIR IDENTIFICADORS
+
+        // ID del Streamer (necessari per carregar els productes)
         streamerId = intent.getIntExtra("STREAMER_ID", -1)
 
-        if (streamerId == -1) {
-            Toast.makeText(this, "Error: Botiga no trobada", Toast.LENGTH_SHORT).show()
+        // ID de l'Espectador (necessari per afegir al carro)
+        val prefs = getSharedPreferences("MerchStreamPrefs", MODE_PRIVATE)
+        userId = prefs.getInt("USER_ID", -1)
+
+        if (streamerId == -1 || userId == -1) {
+            Toast.makeText(this, "Error: Identificador de botiga o sessió perdut", Toast.LENGTH_SHORT).show()
             finish()
             return
         }
 
-        // Títol temporal (podries buscar el nom del streamer a la BD també)
+        // 2. CONFIGURAR LA VISTA
         title = "Botiga del Streamer #$streamerId"
 
-        // Configurem RecyclerView en Graella (2 columnes)
+        // RecyclerView en format de graella (2 columnes)
         rvProductes = findViewById(R.id.rv_productes_botiga)
         rvProductes.layoutManager = GridLayoutManager(this, 2)
 
+        // Botó de Carretó
+        val btnCart = findViewById<FloatingActionButton>(R.id.fab_view_cart)
+
+        // 3. LÒGICA DEL CARRETÓ
+        btnCart.setOnClickListener {
+            val intent = Intent(this, CartActivity::class.java)
+            startActivity(intent)
+        }
+
+        // 4. CARREGAR PRODUCTES (aquesta funció ja la tenies)
         carregarProductes()
     }
 
     private fun carregarProductes() {
         lifecycleScope.launch(Dispatchers.IO) {
-            // FEM LA CONSULTA AL DAO: Productes d'aquest Creador
             val llista = AppSingleton.getInstance().db.producteDao().getProductesByStreamer(streamerId)
 
             withContext(Dispatchers.Main) {
-                if (llista.isEmpty()) {
-                    Toast.makeText(this@StoreActivity, "Aquesta botiga encara està buida!", Toast.LENGTH_LONG).show()
-                }
-
                 val adapter = ProducteAdapter(llista, object : ProducteAdapter.OnProducteClickListener {
                     override fun onProducteClick(producte: Producte) {
-                        Toast.makeText(this@StoreActivity, "Detalls: ${producte.nom}", Toast.LENGTH_SHORT).show()
-                        // Aquí aniria la DetailActivity
+                        Toast.makeText(this@StoreActivity, "${producte.descripcio}", Toast.LENGTH_SHORT).show()
                     }
 
+                    // --- NOU: LOGICA D'AFEGIR AL CARRO ---
                     override fun onAfegirCarroClick(producte: Producte) {
-                        Toast.makeText(this@StoreActivity, "Afegit al carro: ${producte.nom}", Toast.LENGTH_SHORT).show()
-                        // Aquí guardaries a la taula ItemCarro
+                        afegirAlCarro(producte)
                     }
                 })
                 rvProductes.adapter = adapter
+            }
+        }
+    }
+
+    // --- NOVA FUNCIÓ ---
+    private fun afegirAlCarro(producte: Producte) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val dao = AppSingleton.getInstance().db.carroDao()
+
+            // 1. Mirem si ja el tenim
+            val itemExistent = dao.getItemSpecific(userId, producte.pid)
+
+            if (itemExistent != null) {
+                // Si existeix, sumem +1
+                itemExistent.quantitat += 1
+                dao.updateItem(itemExistent)
+            } else {
+                // Si no, el creem
+                val nouItem = ItemCarro(
+                    idUsuari = userId,
+                    idProducte = producte.pid,
+                    quantitat = 1
+                )
+                dao.insertItem(nouItem)
+            }
+
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@StoreActivity, "Afegit al carro: ${producte.nom}", Toast.LENGTH_SHORT).show()
             }
         }
     }

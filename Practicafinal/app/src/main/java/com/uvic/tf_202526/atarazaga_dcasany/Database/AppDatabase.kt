@@ -7,11 +7,12 @@ import androidx.room.RoomDatabase
 import com.uvic.tf_202526.atarazaga_dcasany.Entitats.BotigaVisitada
 import com.uvic.tf_202526.atarazaga_dcasany.Entitats.Producte
 import com.uvic.tf_202526.atarazaga_dcasany.Entitats.Usuari
+import com.uvic.tf_202526.atarazaga_dcasany.Entitats.ItemCarro
 
 // 1. Definim les taules (Entitats) i la versió de la BD
 @Database(
-    entities = [Usuari::class, Producte::class, BotigaVisitada::class],
-    version = 1,
+    entities = [Usuari::class, Producte::class, BotigaVisitada::class, ItemCarro::class],
+    version = 1, // Nota: Si ja has executat l'app, potser has de desinstal·lar-la perquè Room detecti el canvi de taules
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -20,6 +21,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun usuariDao(): UsuariDao
     abstract fun producteDao(): ProducteDao
     abstract fun botigaVisitadaDao(): BotigaVisitadaDao
+
+    abstract fun carroDao(): CarroDao
 
     // 3. Patró Singleton (per obrir la BD una sola vegada)
     companion object {

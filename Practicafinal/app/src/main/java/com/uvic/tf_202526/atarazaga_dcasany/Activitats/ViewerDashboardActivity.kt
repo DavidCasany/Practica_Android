@@ -68,28 +68,56 @@ class ViewerDashboardActivity : AppCompatActivity() {
 
     // 3. Funció per guardar la visita a la BD
     private fun guardarBotiga(qrContent: String) {
-        // Intentem convertir el text del QR a un número (ID del Streamer)
         val streamerId = qrContent.toIntOrNull()
 
         if (streamerId != null) {
-            lifecycleScope.launch(Dispatchers.IO) {
-                // Creem l'objecte de la visita
-                val novaVisita = BotigaVisitada(
-                    idEspectador = userId,
-                    idStreamer = streamerId
-                )
+            // Evitem que un usuari s'afegeixi a si mateix (opcional, però recomanat)
+            if (streamerId == userId) {
+                Toast.makeText(this, "No pots afegir la teva pròpia botiga!", Toast.LENGTH_SHORT).show()
+                return
+            }
 
-                // Guardem a Room (si ja existeix, el DAO ho ignorarà gràcies al OnConflictStrategy.IGNORE)
-                AppSingleton.getInstance().db.botigaVisitadaDao().addVisita(novaVisita)
+            lifecycleScope.launch(Dispatchers.IO) {
+                val db = AppSingleton.getInstance().db
+
+                // 1. COMPROVACIONS DE SEGURETAT
+                val usuariStreamer = db.usuariDao().getUsuariById(streamerId)
+                val jaLaTinc = db.botigaVisitadaDao().jaLaTinc(userId, streamerId)
 
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@ViewerDashboardActivity, "Botiga afegida!", Toast.LENGTH_SHORT).show()
-                    // Refresquem la llista
-                    carregarBotigues()
+                    if (usuariStreamer == null) {
+                        // El número no existeix a la BD
+                        Toast.makeText(this@ViewerDashboardActivity, "Error: Aquest codi no correspon a cap usuari.", Toast.LENGTH_LONG).show()
+
+                    } else if (!usuariStreamer.esStreamer) {
+                        // L'usuari existeix, però és un espectador (no té botiga)
+                        Toast.makeText(this@ViewerDashboardActivity, "Error: Aquest usuari no és un Streamer!", Toast.LENGTH_LONG).show()
+
+                    } else if (jaLaTinc) {
+                        // Ja tenim la botiga a la llista
+                        Toast.makeText(this@ViewerDashboardActivity, "Ja tens aquesta llista afegida!", Toast.LENGTH_SHORT).show()
+
+                    } else {
+                        // 2. TOT CORRECTE: GUARDEM
+                        guardarDefinitivament(streamerId)
+                    }
                 }
             }
         } else {
-            Toast.makeText(this, "Codi QR invàlid: No és un ID numèric", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Codi QR invàlid", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Funció auxiliar per no tenir tot el codi 'anidat'
+    private fun guardarDefinitivament(streamerId: Int) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val novaVisita = BotigaVisitada(idEspectador = userId, idStreamer = streamerId)
+            AppSingleton.getInstance().db.botigaVisitadaDao().addVisita(novaVisita)
+
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@ViewerDashboardActivity, "Botiga afegida correctament!", Toast.LENGTH_SHORT).show()
+                carregarBotigues()
+            }
         }
     }
 

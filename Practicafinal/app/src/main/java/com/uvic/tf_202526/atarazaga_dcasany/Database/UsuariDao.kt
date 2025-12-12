@@ -23,4 +23,7 @@ interface UsuariDao {
     // 3. VALIDACIÓ: Busca si ja existeix un usuari amb aquest nom (per no repetir).
     @Query("SELECT * FROM usuaris_table WHERE nom_usuari = :nom")
     suspend fun getUsuariByNom(nom: String): Usuari?
+
+    @Query("SELECT * FROM usuaris_table WHERE uid = :id")
+    suspend fun getUsuariById(id: Int): Usuari?
 }

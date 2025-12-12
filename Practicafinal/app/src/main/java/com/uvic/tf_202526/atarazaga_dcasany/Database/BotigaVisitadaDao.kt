@@ -17,4 +17,7 @@ interface BotigaVisitadaDao {
     // LLISTAR: Per al RecyclerView de l'Espectador (Historial)
     @Query("SELECT * FROM botigues_visitades_table WHERE id_espectador = :idEspectador")
     suspend fun getVisitesByEspectador(idEspectador: Int): List<BotigaVisitada>
+
+    @Query("SELECT EXISTS(SELECT * FROM botigues_visitades_table WHERE id_espectador = :userId AND id_streamer = :streamerId)")
+    suspend fun jaLaTinc(userId: Int, streamerId: Int): Boolean
 }
