@@ -1,5 +1,6 @@
 package com.uvic.tf_202526.atarazaga_dcasany.Adaptadors
 
+import android.icu.text.SimpleDateFormat
 import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
@@ -9,23 +10,27 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.uvic.tf_202526.atarazaga_dcasany.Entitats.BotigaDisplay
 import com.uvic.tf_202526.atarazaga_dcasany.R
+import java.util.Date
+import java.util.Locale
+
+// Dins de BotigaAdapter.kt
 
 class BotigaAdapter(
-    private val llista: List<BotigaDisplay>, // <--- FIXA'T: Ara fem servir la nova classe
+    private val llista: List<BotigaDisplay>,
     private val onClick: (BotigaDisplay) -> Unit
 ) : RecyclerView.Adapter<BotigaAdapter.BotigaViewHolder>() {
 
     class BotigaViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val ivBanner: ImageView = view.findViewById(R.id.iv_streamer_banner_thumb)
-        val tvNom: TextView = view.findViewById(R.id.tv_streamer_name)
-        // Si el teu layout de fila (item_botiga.xml) té una imatge, posa-la aquí.
-        // Si fas servir 'simple_list_item_1', no tindràs imatge a la llista, només text.
-        // Per fer-ho bé, assumirem que fas servir un layout simple per ara i mostrem el NOM REAL.
+        // NOVETAT: Utilitzem les noves IDs del layout Card
+        val ivBanner: ImageView = view.findViewById(R.id.iv_card_banner)
+        val tvNom: TextView = view.findViewById(R.id.tv_card_streamer_name)
+        val tvData: TextView = view.findViewById(R.id.tv_card_last_visit)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BotigaViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_streamer_row, parent, false)
+            // <<<<<<<<<<<<< NOU LAYOUT DE TARGETA >>>>>>>>>>>>>>
+            .inflate(R.layout.item_streamer_card, parent, false)
         return BotigaViewHolder(view)
     }
 
@@ -34,17 +39,21 @@ class BotigaAdapter(
 
         holder.tvNom.text = "Botiga de ${botiga.nomStreamer}"
 
-        // Lògica per carregar el mini-banner
+        // Format de data (comprovem l'existència de BotigaDisplay.dataVisita)
+        val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+        holder.tvData.text = "Última visita: ${sdf.format(Date(botiga.dataVisita))}"
+
+        // Lògica per carregar el Banner
         if (!botiga.bannerUri.isNullOrEmpty()) {
-            // <<<<<<<<<<<<< CORRECCIÓ CLAU: AFEGIR TRY-CATCH >>>>>>>>>>>>>>
             try {
+                // La URI local (file://) funciona sense permissions
                 holder.ivBanner.setImageURI(Uri.parse(botiga.bannerUri))
             } catch (e: Exception) {
-                // Si la URI està trencada (pèrdua de permís), usem el placeholder genèric
-                holder.ivBanner.setImageResource(android.R.drawable.ic_menu_gallery)
+                // Si la URI falla per qualsevol motiu, mostrem el gris
+                holder.ivBanner.setImageResource(android.R.color.darker_gray)
             }
         } else {
-            holder.ivBanner.setImageResource(android.R.drawable.ic_menu_gallery)
+            holder.ivBanner.setImageResource(android.R.color.darker_gray)
         }
 
         holder.itemView.setOnClickListener { onClick(botiga) }

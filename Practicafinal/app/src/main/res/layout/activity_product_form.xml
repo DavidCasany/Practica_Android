@@ -1,110 +1,188 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:background="@drawable/gradient_splash_background"
+    tools:context=".Activitats.ProductFormActivity">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
-
-        <TextView
-            android:text="Nou Producte"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"/>
-
-        <EditText
-            android:id="@+id/et_nom_prod"
-            android:hint="Nom del producte"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-
-        <EditText
-            android:id="@+id/et_desc_prod"
-            android:hint="Descripció"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"/>
-
-        <EditText
-            android:id="@+id/et_preu_prod"
-            android:hint="Preu (€)"
-            android:inputType="numberDecimal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"/>
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:padding="24dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginTop="12dp"
-            android:background="#F5F5F5"
-            android:padding="8dp">
+            android:orientation="vertical">
 
-            <CheckBox
-                android:id="@+id/cb_es_oferta"
+            <TextView
+                android:id="@+id/tv_title_form"
+                android:text="Nou Producte"
+                android:textSize="32sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-light"
+                android:textColor="@android:color/white"
+                android:layout_marginBottom="24dp"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Activar Oferta"/>
+                android:layout_height="wrap_content"/>
 
-            <EditText
-                android:id="@+id/et_preu_oferta"
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:hint="Preu Rebaixat (€)"
-                android:inputType="numberDecimal"
-                android:enabled="false"/> </LinearLayout>
-        <TextView
-            android:text="Imatge del producte"
-            android:layout_marginTop="24dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+                android:textColorHint="#CCCCCC"
+                app:boxStrokeColor="#FF5722"
+                app:hintTextColor="#FF5722"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
-        <ImageView
-            android:id="@+id/iv_preview"
-            android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:background="#EEEEEE"
-            android:scaleType="centerCrop"
-            android:src="@android:drawable/ic_menu_camera"
-            android:layout_marginTop="8dp"/>
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_nom_prod"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Nom del producte"
+                    android:textColor="@android:color/white"/>
+            </com.google.android.material.textfield.TextInputLayout>
 
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:layout_marginTop="8dp">
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:textColorHint="#CCCCCC"
+                app:boxStrokeColor="#FF5722"
+                app:hintTextColor="#FF5722"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
-            <Button
-                android:id="@+id/btn_camera"
-                android:text="CÀMERA"
-                android:layout_marginEnd="8dp"
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_desc_prod"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Descripció"
+                    android:lines="4"
+                    android:gravity="top"
+                    android:textColor="@android:color/white"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:textColorHint="#CCCCCC"
+                app:boxStrokeColor="#FF5722"
+                app:hintTextColor="#FF5722"
+                app:suffixText="€"
+                app:suffixTextColor="#FFFFFF"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_preu_prod"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Preu Base"
+                    android:inputType="numberDecimal"
+                    android:textColor="@android:color/white"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                app:cardCornerRadius="8dp"
+                app:cardBackgroundColor="#1A1A3A"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <CheckBox
+                        android:id="@+id/cb_es_oferta"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Activar Oferta"
+                        android:textColor="#FFFFFF"
+                        android:buttonTint="#FF5722"/>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:textColorHint="#AAAAAA"
+                        app:boxStrokeColor="#FF5722"
+                        app:hintTextColor="#FF5722"
+                        app:suffixText="€"
+                        app:suffixTextColor="#FFFFFF"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_preu_oferta"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Preu Rebaixat"
+                            android:inputType="numberDecimal"
+                            android:enabled="false"
+                            android:textColor="#FFFFFF"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <TextView
+                android:text="Imatge del producte (Opcional)"
+                android:layout_marginTop="32dp"
+                android:textColor="#CCCCCC"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
 
+            <ImageView
+                android:id="@+id/iv_preview"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:background="#333333"
+                android:scaleType="centerCrop"
+                android:src="@android:drawable/ic_menu_camera"
+                android:tint="#AAAAAA"
+                android:layout_marginTop="8dp"/>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:layout_marginTop="16dp">
+
+                <Button
+                    android:id="@+id/btn_camera"
+                    android:text="CÀMERA"
+                    android:layout_marginEnd="8dp"
+                    android:backgroundTint="#6200EE"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+                <Button
+                    android:id="@+id/btn_galeria"
+                    android:text="GALERIA"
+                    android:layout_marginStart="8dp"
+                    android:backgroundTint="#FF5722"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+            </LinearLayout>
+
             <Button
-                android:id="@+id/btn_galeria"
-                android:text="GALERIA"
-                android:layout_marginStart="8dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:id="@+id/btn_guardar_prod"
+                android:text="GUARDAR PRODUCTE"
+                android:backgroundTint="#4CAF50"
+                android:layout_marginTop="48dp"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                app:cornerRadius="10dp"/>
+
         </LinearLayout>
-
-        <Button
-            android:id="@+id/btn_guardar_prod"
-            android:text="GUARDAR PRODUCTE"
-            android:backgroundTint="#6200EE"
-            android:layout_marginTop="32dp"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"/>
-
-    </LinearLayout>
-</ScrollView>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

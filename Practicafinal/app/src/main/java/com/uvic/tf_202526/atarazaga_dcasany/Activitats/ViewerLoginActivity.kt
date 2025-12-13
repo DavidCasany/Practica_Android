@@ -20,7 +20,7 @@ class ViewerLoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_viewer_login)
 
-        val etNom = findViewById<EditText>(R.id.et_usuari)
+        val etNom = findViewById<EditText>(R.id.et_nom_usuari)
         val etPass = findViewById<EditText>(R.id.et_password)
         val btnLogin = findViewById<Button>(R.id.btn_login)
         val btnRegistre = findViewById<Button>(R.id.btn_registre)

@@ -4,7 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "items_carro_table")
+@Entity(tableName = "carro_table")
 data class ItemCarro(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
@@ -16,5 +16,5 @@ data class ItemCarro(
     val idProducte: Int,
 
     @ColumnInfo(name = "quantitat")
-    var quantitat: Int = 1
+    var quantitat: Int = 1 // <--- CORRECCIÓ CLAU: Ara és 'var'
 )

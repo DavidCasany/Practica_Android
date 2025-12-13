@@ -5,6 +5,9 @@ import android.os.Bundle
 import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
+import android.view.View // NOU IMPORT per View.animate()
+import android.widget.ImageView // NOU IMPORT per ImageView
+import android.widget.TextView // NOU IMPORT per TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GestureDetectorCompat
@@ -21,6 +24,54 @@ class SplashActivity : AppCompatActivity() {
 
         // Inicialitzem el detector de gestos
         mDetector = GestureDetectorCompat(this, MyGestureListener())
+
+        // NOU: Iniciem l'animació premium just després de carregar el layout
+        iniciarAnimacio()
+    }
+
+    // NOU: Funció per gestionar l'animació de fade-in
+    private fun iniciarAnimacio() {
+        // Obtenim les vistes pel seu ID (assumint que s'ha aplicat el nou XML)
+        val logo = findViewById<ImageView>(R.id.iv_logo)
+        val title = findViewById<TextView>(R.id.tv_app_title)
+        val subtitle = findViewById<TextView>(R.id.tv_app_subtitle)
+        val streamerInst = findViewById<TextView>(R.id.tv_streamer_instruction)
+        val viewerInst = findViewById<TextView>(R.id.tv_viewer_instruction)
+
+        // Animació del Logo (Aparició i petit desplaçament amunt)
+        logo.animate()
+            .alpha(1f)
+            .translationY(-20f)
+            .setDuration(1000)
+            .setStartDelay(300)
+            .start()
+
+        // Animació del Text Principal
+        title.animate()
+            .alpha(1f)
+            .setDuration(800)
+            .setStartDelay(1000)
+            .start()
+
+        // Animació del Subtítol
+        subtitle.animate()
+            .alpha(1f)
+            .setDuration(800)
+            .setStartDelay(1200)
+            .start()
+
+        // Animació de les Instruccions
+        streamerInst.animate()
+            .alpha(1f)
+            .setDuration(500)
+            .setStartDelay(1800)
+            .start()
+
+        viewerInst.animate()
+            .alpha(1f)
+            .setDuration(500)
+            .setStartDelay(1800)
+            .start()
     }
 
     // Aquest mètode captura els tocs a la pantalla i els passa al detector
@@ -68,7 +119,7 @@ class SplashActivity : AppCompatActivity() {
         }
     }
 
-    // --- ACCIONS DE NAVEGACIÓ ---
+    // --- ACCIONS DE NAVEGACIÓ (EXISTENTS) ---
 
     private fun onSwipeUp() {
         Log.i("MERCH_APP", "Gesture: Swipe UP -> Anant a Streamer Login")

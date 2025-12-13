@@ -38,7 +38,7 @@ class ViewerDashboardActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_viewer_dashboard)
 
-        rvBotigues = findViewById(R.id.rv_botigues_visitades)
+        rvBotigues = findViewById(R.id.rv_botigues)
         rvBotigues.layoutManager = LinearLayoutManager(this)
 
         val btnScan = findViewById<FloatingActionButton>(R.id.fab_scan_qr)
@@ -141,7 +141,7 @@ class ViewerDashboardActivity : AppCompatActivity() {
                 }
 
                 // Assegura't que el teu RecyclerView es diu 'rvBotigues' o similar
-                val rvBotigues = findViewById<RecyclerView>(R.id.rv_botigues_visitades)
+                val rvBotigues = findViewById<RecyclerView>(R.id.rv_botigues)
                 rvBotigues.adapter = adapter
             }
         }
