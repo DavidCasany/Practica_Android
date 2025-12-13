@@ -110,40 +110,42 @@ class ProductFormActivity : AppCompatActivity() {
 
                 withContext(Dispatchers.Main) {
                     if (prod != null) {
-                        // 3a. Carregar Dades de Text
+                        // [INICI: Càrrega de dades per a tots els camps (NECESSARI per al Problema 2)]
                         etNom.setText(prod.nom)
                         etDesc.setText(prod.descripcio)
                         etPreu.setText(prod.preu.toString())
 
-                        // FIX 2: Carregar Ofertes
+                        // Lògica per carregar l'estat d'oferta (Fix 2 - Part 1)
                         cbOferta.isChecked = prod.esOferta
-                        if (prod.preuOferta > 0) {
+                        etPreuOferta.isEnabled = prod.esOferta
+                        // Fix 2: Carreguem l'últim preu rebaixat si no és 0,
+                        // ja que el volem recordar (encara que esOferta sigui false).
+                        if (prod.preuOferta > 0.0) {
                             etPreuOferta.setText(prod.preuOferta.toString())
                         } else {
-                            // Si el preu és 0, assegurem que el camp estigui buit, no "0.0"
                             etPreuOferta.setText("")
                         }
-                        // L'habilitació depèn del CheckBox, però el text està fixat.
-                        etPreuOferta.isEnabled = prod.esOferta
+                        // [FINAL: Càrrega de dades]
 
-                        // FIX 1: Carregar Imatge amb BitmapFactory (més robust)
+
+                        // Carregar Imatge existent (FIX PROBLEMA 1: Simplificació)
                         if (!prod.imatgeUri.isNullOrEmpty()) {
                             try {
                                 currentPhotoUri = Uri.parse(prod.imatgeUri)
 
-                                // Carrega la imatge com a Bitmap, evitant problemes de permisos de URI
-                                contentResolver.openInputStream(currentPhotoUri!!)?.use { stream ->
-                                    val bitmap = BitmapFactory.decodeStream(stream)
-                                    ivPreview.setImageBitmap(bitmap)
-                                } ?: run {
-                                    ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
-                                }
+                                // [ELIMINAR AQUESTES LÍNIES SI EXISTEIXEN]
+                                // ivPreview.setImageDrawable(null)
+                                // ivPreview.setImageBitmap(null)
+
+                                // Aquesta és l'única línia de càrrega que necessites
+                                ivPreview.setImageURI(currentPhotoUri)
 
                             } catch (e: Exception) {
-                                e.printStackTrace()
+                                // Si la URI no es pot llegir, mostrem l'icona de càmera (el placeholder)
                                 ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
                             }
                         } else {
+                            // Si no hi ha URI, assegurem-nos de posar l'icona de càmera (el placeholder)
                             ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
                         }
                     } else {
@@ -177,7 +179,7 @@ class ProductFormActivity : AppCompatActivity() {
             // Recollim dades d'oferta
             val esOferta = cbOferta.isChecked
             // Si l'oferta està activada, utilitzem el preu del camp. Si no, és 0.0.
-            val preuOferta = if (esOferta) etPreuOferta.text.toString().toDoubleOrNull() ?: 0.0 else 0.0
+            val preuOferta = etPreuOferta.text.toString().toDoubleOrNull() ?: 0.0
 
             if (nom.isNotEmpty() && preuStr.isNotEmpty()) {
                 val preu = preuStr.toDoubleOrNull() ?: 0.0

@@ -144,10 +144,9 @@
                 android:id="@+id/iv_preview"
                 android:layout_width="match_parent"
                 android:layout_height="200dp"
-                android:background="#333333"
                 android:scaleType="centerCrop"
                 android:src="@android:drawable/ic_menu_camera"
-                android:tint="#AAAAAA"
+                app:tint="#AAAAAA"
                 android:layout_marginTop="8dp"/>
 
             <LinearLayout
