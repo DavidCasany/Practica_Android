@@ -31,4 +31,7 @@ interface ProducteDao {
     // ELIMINAR: Esborrar un producte
     @Delete
     suspend fun deleteProducte(producte: Producte)
+
+    @Query("SELECT * FROM productes_table WHERE pid = :id LIMIT 1")
+    suspend fun getProducteById(id: Int): Producte?
 }

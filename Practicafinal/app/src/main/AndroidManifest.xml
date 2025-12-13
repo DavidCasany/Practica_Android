@@ -13,6 +13,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.PracticaFinal">
         <activity
+            android:name=".Activitats.ProductDetailActivity"
+            android:exported="false" />
+        <activity
             android:name=".Activitats.CartActivity"
             android:exported="false" />
         <activity
