@@ -1,9 +1,9 @@
 package com.uvic.tf_202526.atarazaga_dcasany.Activitats
 
 import android.content.Intent
+import androidx.core.net.toUri
 import android.net.Uri
 import android.os.Bundle
-import android.view.View
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -19,6 +19,8 @@ import com.uvic.tf_202526.atarazaga_dcasany.Apps.AppSingleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File // <<<<< NOU IMPORT
+import java.io.FileOutputStream // <<<<< NOU IMPORT
 
 class CreatorDashboardActivity : AppCompatActivity() {
 
@@ -26,20 +28,27 @@ class CreatorDashboardActivity : AppCompatActivity() {
     private lateinit var rvProductes: RecyclerView
     private lateinit var ivBanner: ImageView
 
-    // Launcher de Galeria AMB PERSISTÈNCIA DE PERMISOS
+    // Launcher de Galeria AMB COPIA LOCAL (SOLUCIÓ PERMANENT)
     private val bannerLauncher = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
-            ivBanner.setImageURI(uri)
+            lifecycleScope.launch(Dispatchers.IO) {
+                // 1. Copiem la imatge a una ubicació de l'app (Internal Storage)
+                val localUriString = copyUriToLocalFile(uri)
 
-            // CORRECCIÓ CLAU: Fem persistent l'URI
-            try {
-                val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-                contentResolver.takePersistableUriPermission(uri, flags)
-            } catch (e: Exception) {
-                Toast.makeText(this, "Permisos d'imatge no guardats permanentment.", Toast.LENGTH_LONG).show()
+                withContext(Dispatchers.Main) {
+                    if (localUriString != null) {
+                        // 2. Visualitzem la URI LOCAL (file://)
+                        ivBanner.setImageURI(Uri.parse(localUriString))
+
+                        // 3. Guardem la URI LOCAL a la Base de Dades
+                        guardarBannerBD(localUriString)
+                        Toast.makeText(this@CreatorDashboardActivity, "✅ Banner guardat permanentment a l'app!", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(this@CreatorDashboardActivity, "❌ Error al processar la imatge. Torna a intentar amb una imatge local.", Toast.LENGTH_LONG).show()
+                        ivBanner.setImageResource(android.R.color.darker_gray)
+                    }
+                }
             }
-
-            guardarBannerBD(uri.toString())
         }
     }
 
@@ -47,11 +56,10 @@ class CreatorDashboardActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_creator_dashboard)
 
-        // --- 1. RECERCA DE LA ID (Millorada per evitar crashes) ---
+        // --- 1. RECERCA DE LA ID ---
         streamerId = intent.getIntExtra("STREAMER_ID", -1)
         if (streamerId == -1) {
             val prefs = getSharedPreferences("MerchStreamPrefs", MODE_PRIVATE)
-            // Utilitzem l'ID genèrica guardada al login
             streamerId = prefs.getInt("USER_ID", -1)
         }
 
@@ -82,25 +90,48 @@ class CreatorDashboardActivity : AppCompatActivity() {
         }
 
         // --- 4. CÀRREGA INICIAL DE DADES ---
-        carregarDadesUsuari() // Càrrega el nom i el banner
+        carregarDadesUsuari()
         carregarElsMeusProductes()
     }
+
+    // NOU: Funció per copiar la imatge a l'emmagatzematge privat de l'app
+    private fun copyUriToLocalFile(originalUri: Uri): String? {
+        // Nom de l'arxiu basat en la ID de l'usuari
+        val fileName = "banner_${streamerId}.jpg"
+        // Arxiu de destinació dins la memòria interna de l'app
+        val destinationFile = File(filesDir, fileName)
+
+        try {
+            // Obtenim el flux de dades de la URI original
+            contentResolver.openInputStream(originalUri)?.use { inputStream ->
+                // Guardem el flux a l'arxiu local
+                FileOutputStream(destinationFile).use { outputStream ->
+                    inputStream.copyTo(outputStream)
+                    // Retornem la URI local com a String
+                    return destinationFile.toUri().toString()
+                }
+            }
+        } catch (e: Exception) {
+            // Si la còpia falla per qualsevol motiu (p. ex., la URI original està trencada)
+            e.printStackTrace()
+        }
+        return null
+    }
+
 
     private fun carregarDadesUsuari() {
         lifecycleScope.launch(Dispatchers.IO) {
             val usuari = AppSingleton.getInstance().db.usuariDao().getUsuariById(streamerId)
             withContext(Dispatchers.Main) {
                 if (usuari != null) {
-                    // Posem el nom del streamer com a títol
                     title = "Botiga de ${usuari.nom}"
 
                     val bannerUriString = usuari.bannerUri
                     if (!bannerUriString.isNullOrEmpty()) {
-                        // CORRECCIÓ: Protegim la càrrega de la imatge
+                        // Càrrega segura amb try-catch (mantingut per a robustesa)
                         try {
                             ivBanner.setImageURI(Uri.parse(bannerUriString))
                         } catch (e: Exception) {
-                            // Si peta la URI (permissos trencats), mostrem el placeholder.
                             ivBanner.setImageResource(android.R.color.darker_gray)
                         }
                     } else {
@@ -126,13 +157,10 @@ class CreatorDashboardActivity : AppCompatActivity() {
 
     private fun carregarElsMeusProductes() {
         lifecycleScope.launch(Dispatchers.IO) {
-            // 1. Consultem a la BD els productes d'aquest Creador
             val llista = AppSingleton.getInstance().db.producteDao().getProductesByStreamer(streamerId)
 
             withContext(Dispatchers.Main) {
-                // 2. Muntem l'adaptador
                 val adapter = CreatorProductAdapter(llista, object : CreatorProductAdapter.OnCreatorClickListener {
-
                     override fun onEditClick(producte: Producte) {
                         val intent = Intent(this@CreatorDashboardActivity, ProductFormActivity::class.java)
                         intent.putExtra("STREAMER_ID", streamerId)
@@ -163,12 +191,10 @@ class CreatorDashboardActivity : AppCompatActivity() {
 
     private fun esborrarProducte(producte: Producte) {
         lifecycleScope.launch(Dispatchers.IO) {
-            // Eliminem de la BD
             AppSingleton.getInstance().db.producteDao().deleteProducte(producte)
 
             withContext(Dispatchers.Main) {
                 Toast.makeText(this@CreatorDashboardActivity, "Eliminat!", Toast.LENGTH_SHORT).show()
-                // Refresquem la llista
                 carregarElsMeusProductes()
             }
         }
