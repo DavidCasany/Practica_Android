@@ -36,7 +36,13 @@ class BotigaAdapter(
 
         // Lògica per carregar el mini-banner
         if (!botiga.bannerUri.isNullOrEmpty()) {
-            holder.ivBanner.setImageURI(Uri.parse(botiga.bannerUri))
+            // <<<<<<<<<<<<< CORRECCIÓ CLAU: AFEGIR TRY-CATCH >>>>>>>>>>>>>>
+            try {
+                holder.ivBanner.setImageURI(Uri.parse(botiga.bannerUri))
+            } catch (e: Exception) {
+                // Si la URI està trencada (pèrdua de permís), usem el placeholder genèric
+                holder.ivBanner.setImageResource(android.R.drawable.ic_menu_gallery)
+            }
         } else {
             holder.ivBanner.setImageResource(android.R.drawable.ic_menu_gallery)
         }
