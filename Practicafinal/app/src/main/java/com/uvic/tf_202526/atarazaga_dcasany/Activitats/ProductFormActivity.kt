@@ -137,6 +137,7 @@ class ProductFormActivity : AppCompatActivity() {
                                 // ivPreview.setImageDrawable(null)
                                 // ivPreview.setImageBitmap(null)
 
+                                ivPreview.setImageDrawable(null)
                                 // Aquesta és l'única línia de càrrega que necessites
                                 ivPreview.setImageURI(currentPhotoUri)
 
