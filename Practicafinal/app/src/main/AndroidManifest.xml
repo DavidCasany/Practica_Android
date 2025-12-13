@@ -45,9 +45,6 @@
         <activity
             android:name=".Activitats.StreamerLoginActivity"
             android:exported="false" />
-        <activity
-            android:name=".MainActivity"
-            android:exported="false" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

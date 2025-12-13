@@ -3,10 +3,11 @@ package com.uvic.tf_202526.atarazaga_dcasany.Activitats
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
 import android.net.Uri
-import androidx.core.net.toUri
 import android.os.Bundle
 import android.os.Environment
+import android.util.Log
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
@@ -19,55 +20,55 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
+import com.uvic.tf_202526.atarazaga_dcasany.Apps.AppSingleton
 import com.uvic.tf_202526.atarazaga_dcasany.Entitats.Producte
 import com.uvic.tf_202526.atarazaga_dcasany.R
-import com.uvic.tf_202526.atarazaga_dcasany.Apps.AppSingleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import android.graphics.BitmapFactory
-import android.util.Log
 
 class ProductFormActivity : AppCompatActivity() {
 
     private lateinit var ivPreview: ImageView
-    private var currentPhotoUri: Uri? = null // Contindrà la URI del fitxer local amb esquema 'file://'
-    private var tempPhotoUri: Uri? = null    // Ruta temporal per a la càmera
+    private var currentPhotoUri: Uri? = null
+    // ELIMINAT: private var tempPhotoUri: Uri? = null
+    private var currentTempPhotoPath: String? = null // RUTA ABSOLUTA DEL FITXER TEMPORAL DE LA CÀMERA
     private var streamerId: Int = -1
     private var productIdToEdit: Int = -1
 
-    // LAUNCHER CÀMERA (CORREGIT)
+    // LAUNCHER CÀMERA (Corregit per utilitzar la ruta File)
     private val cameraLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success) {
-            //currentPhotoUri = tempPhotoUri // <-- ELIMINAT. El copiem a continuació
-
-            // ** FIX CÀMERA 1: Copiem la URI de la càmera a l'emmagatzematge intern **
-            tempPhotoUri?.let { uri ->
+            currentTempPhotoPath?.let { tempPath ->
                 lifecycleScope.launch(Dispatchers.IO) {
-                    // El camí local és la RUTA ABSOLUTA.
-                    val localPathString = copyUriToLocalFile(uri)
 
+                    // 1. Copiem el fitxer des de la ruta absoluta temporal a la ruta persistent
+                    val localPathString = copyFileToLocalFile(tempPath)
+
+                    // 2. Si la còpia ha anat bé, carreguem la imatge al Main Thread
                     withContext(Dispatchers.Main) {
                         if (localPathString != null) {
-                            // currentPhotoUri es crea a partir del camí local (més robust)
                             currentPhotoUri = Uri.fromFile(File(localPathString))
 
-                            // ** FIX CÀMERA 2: Carreguem amb BitmapFactory (igual que la galeria) **
                             try {
                                 val bitmap = BitmapFactory.decodeFile(localPathString)
                                 if (bitmap != null) {
                                     ivPreview.setImageBitmap(bitmap)
+                                    ivPreview.scaleType = ImageView.ScaleType.CENTER_CROP
+                                    Log.d("ProductForm", "Imatge carregada a l'ImageView.")
                                 } else {
+                                    Log.e("ProductForm", "ERROR: BitmapFactory.decodeFile ha retornat NULL per a la ruta: $localPathString")
                                     ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
                                 }
                             } catch (e: Exception) {
-                                Log.e("ProductForm", "Error al carregar la imatge de la càmera: ${e.message}")
+                                Log.e("ProductForm", "Error al carregar la imatge de la càmera amb decodeFile: ${e.message}")
                                 ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
                             }
                             Toast.makeText(this@ProductFormActivity, "Imatge de càmera copiada localment.", Toast.LENGTH_SHORT).show()
@@ -78,27 +79,32 @@ class ProductFormActivity : AppCompatActivity() {
                 }
             }
         }
+        // Netejar la referència a la ruta temporal
+        currentTempPhotoPath = null
     }
 
-    // LAUNCHER GALERIA (CORREGIT)
+    // LAUNCHER GALERIA (Manté la lògica original de ContentResolver)
     private val galleryLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
             lifecycleScope.launch(Dispatchers.IO) {
-                // El localPathString és ara la RUTA ABSOLUTA del fitxer copiat
                 val localPathString = copyUriToLocalFile(uri)
 
                 withContext(Dispatchers.Main) {
                     if (localPathString != null) {
-                        // Creem la URI a partir de la ruta per guardar-la a la BD
                         currentPhotoUri = Uri.fromFile(File(localPathString))
 
-                        // ** FIX GALERIA: Descodificació de la imatge des de la RUTA ABSOLUTA **
                         try {
-                            val bitmap = BitmapFactory.decodeFile(localPathString)
-                            if (bitmap != null) {
-                                ivPreview.setImageBitmap(bitmap)
-                            } else {
-                                ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
+                            val imageFile = File(localPathString)
+                            imageFile.inputStream().use { inputStream ->
+                                val bitmap = BitmapFactory.decodeStream(inputStream)
+                                if (bitmap != null) {
+                                    ivPreview.setImageBitmap(bitmap)
+                                    ivPreview.scaleType = ImageView.ScaleType.CENTER_CROP
+                                    ivPreview.requestLayout()
+                                    ivPreview.invalidate()
+                                } else {
+                                    ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
+                                }
                             }
                         } catch (e: Exception) {
                             Log.e("ProductForm", "Error al carregar la imatge al galleryLauncher: ${e.message}")
@@ -154,9 +160,15 @@ class ProductFormActivity : AppCompatActivity() {
             lifecycleScope.launch(Dispatchers.IO) {
                 val prod = AppSingleton.getInstance().db.producteDao().getProducteById(productIdToEdit)
 
+                // +++ DEPURACIÓ: LOGS D'INICI +++
+                Log.d("DEBUG_IMATGE", "Producte carregat per edició:")
+                Log.d("DEBUG_IMATGE", "  - Nom: ${prod?.nom}")
+                Log.d("DEBUG_IMATGE", "  - imatgeUri: ${prod?.imatgeUri}")
+                Log.d("DEBUG_IMATGE", "  - L'URI és null o buida?: ${prod?.imatgeUri.isNullOrEmpty()}")
+
                 withContext(Dispatchers.Main) {
                     if (prod != null) {
-                        // [INICI: Càrrega de dades per a tots els camps]
+                        // Carregar dades dels camps
                         etNom.setText(prod.nom)
                         etDesc.setText(prod.descripcio)
                         etPreu.setText(prod.preu.toString())
@@ -168,35 +180,82 @@ class ProductFormActivity : AppCompatActivity() {
                         } else {
                             etPreuOferta.setText("")
                         }
-                        // [FINAL: Càrrega de dades]
 
-
-                        // Carregar Imatge existent (FIX DEFINITIU)
+                        // +++ CARREGAR IMATGE EXISTENT (VERSIÓ CORREGIDA) +++
                         if (!prod.imatgeUri.isNullOrEmpty()) {
-                            try {
-                                val savedUri = Uri.parse(prod.imatgeUri)
+                            lifecycleScope.launch(Dispatchers.IO) {
+                                try {
+                                    val savedUri = Uri.parse(prod.imatgeUri)
+                                    Log.d("DEBUG_IMATGE", "Intentant obrir URI: $savedUri, Scheme: ${savedUri.scheme}")
 
-                                // ** CORRECCIÓ: Extraiem el PATH ABSOLUT de la URI. **
-                                // El .path de file://ruta/fitxer.jpg és /ruta/fitxer.jpg.
-                                val filePath = savedUri.path
+                                    var inputStream: java.io.InputStream? = null
 
-                                if (filePath != null && File(filePath).exists()) {
-                                    val bitmap = BitmapFactory.decodeFile(filePath)
-                                    if (bitmap != null) {
-                                        ivPreview.setImageBitmap(bitmap)
-                                        currentPhotoUri = savedUri // Mantenim la URI completa per guardar
-                                    } else {
-                                        // Fallback si la descodificació falla
+                                    // Estratègia 1: ContentResolver per a URIs content://
+                                    if (savedUri.scheme == "content") {
+                                        try {
+                                            inputStream = contentResolver.openInputStream(savedUri)
+                                            Log.d("DEBUG_IMATGE", "Obert amb ContentResolver")
+                                        } catch (e: SecurityException) {
+                                            Log.e("DEBUG_IMATGE", "Permís denegat per contentResolver: ${e.message}")
+                                        } catch (e: Exception) {
+                                            Log.e("DEBUG_IMATGE", "Error amb contentResolver: ${e.message}")
+                                        }
+                                    }
+
+                                    // Estratègia 2: FileInputStream per a URIs file://
+                                    if (inputStream == null && savedUri.scheme == "file") {
+                                        try {
+                                            val file = File(savedUri.path ?: "")
+                                            if (file.exists()) {
+                                                inputStream = FileInputStream(file)
+                                                Log.d("DEBUG_IMATGE", "Obert amb FileInputStream")
+                                            } else {
+                                                Log.e("DEBUG_IMATGE", "Fitxer no existeix: ${file.absolutePath}")
+                                            }
+                                        } catch (e: Exception) {
+                                            Log.e("DEBUG_IMATGE", "Error amb FileInputStream: ${e.message}")
+                                        }
+                                    }
+
+                                    // Processar InputStream si existeix
+                                    inputStream?.use { stream ->
+                                        val bitmap = BitmapFactory.decodeStream(stream)
+
+                                        withContext(Dispatchers.Main) {
+                                            Log.d("DEBUG_MAIN", "Estic al thread principal")
+                                            if (bitmap != null) {
+                                                Log.d("DEBUG_MAIN", "Bitmap dimensions: ${bitmap.width}x${bitmap.height}")
+                                                ivPreview.setImageBitmap(bitmap)
+                                                ivPreview.scaleType = ImageView.ScaleType.CENTER_CROP
+                                                ivPreview.requestLayout()
+                                                ivPreview.invalidate()
+                                                currentPhotoUri = savedUri
+                                                Log.d("DEBUG_LAYOUT", "ImageView dimensions: ${ivPreview.width}x${ivPreview.height}")
+                                                Log.d("DEBUG_IMATGE", "Imatge carregada correctament des de: $savedUri")
+                                            } else {
+                                                Log.d("DEBUG_IMATGE", "Bitmap és null després de decodeStream")
+                                                ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
+                                            }
+                                        }
+                                    } ?: run {
+                                        // Si no es pot obrir l'InputStream
+                                        withContext(Dispatchers.Main) {
+                                            ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
+                                            Log.e("DEBUG_IMATGE", "No s'ha pogut obrir InputStream per a: $savedUri")
+                                        }
+                                    }
+
+                                } catch (e: SecurityException) {
+                                    Log.e("DEBUG_IMATGE", "Permís denegat per llegir la URI: ${e.message}")
+                                    withContext(Dispatchers.Main) {
                                         ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
                                     }
-                                } else {
-                                    // Fallback si el fitxer no existeix
-                                    ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
+                                } catch (e: Exception) {
+                                    Log.e("DEBUG_IMATGE", "Error general carregant imatge: ${e.message}")
+                                    withContext(Dispatchers.Main) {
+                                        ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
+                                    }
                                 }
-
-                            } catch (e: Exception) {
-                                Log.e("ProductForm", "Error al carregar la imatge en edició: ${e.message}")
-                                ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
                             }
                         } else {
                             // Si no hi ha URI
@@ -246,8 +305,10 @@ class ProductFormActivity : AppCompatActivity() {
                     return@setOnClickListener
                 }
 
-                // IMPORTANT: currentPhotoUri ara conté la URI amb l'esquema 'file://'
                 val uriString = currentPhotoUri?.toString()
+
+                // +++ DEPURACIÓ: LOGS DE GUARDAR +++
+                Log.d("DEBUG_IMATGE", "URI a guardar: $uriString")
 
                 lifecycleScope.launch(Dispatchers.IO) {
                     val dao = AppSingleton.getInstance().db.producteDao()
@@ -264,8 +325,10 @@ class ProductFormActivity : AppCompatActivity() {
 
                     if (productIdToEdit == -1) {
                         dao.addProducte(nouProducte)
+                        Log.d("DEBUG_IMATGE", "Producte NOU guardat amb URI: $uriString")
                     } else {
                         dao.updateProducte(nouProducte)
+                        Log.d("DEBUG_IMATGE", "Producte ACTUALITZAT amb URI: $uriString")
                     }
 
                     withContext(Dispatchers.Main) {
@@ -280,8 +343,7 @@ class ProductFormActivity : AppCompatActivity() {
         }
     }
 
-    // Funció per copiar la imatge a l'emmagatzematge privat de l'app (CORREGIT)
-    // Retorna la RUTA ABSOLUTA (String) del fitxer copiat
+    // Funció per copiar la imatge des d'una URI content:// (ús Galeria)
     private fun copyUriToLocalFile(originalUri: Uri): String? {
         val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val fileName = "prod_${streamerId}_${timeStamp}.jpg"
@@ -291,16 +353,17 @@ class ProductFormActivity : AppCompatActivity() {
             contentResolver.openInputStream(originalUri)?.use { inputStream ->
                 FileOutputStream(destinationFile).use { outputStream ->
                     inputStream.copyTo(outputStream)
-                    // ** CANVI CLAU **: Retornem la ruta absoluta, no la URI string.
+                    Log.d("GalleryCopy", "Fitxer copiat correctament des de Galeria. Mida: ${destinationFile.length()} bytes")
+                    // Retornem la ruta absoluta
                     return destinationFile.absolutePath
                 }
             }
         } catch (e: Exception) {
+            Log.e("GalleryCopy", "Error copiant fitxer des de URI: ${e.message}")
             e.printStackTrace()
         }
         return null
     }
-
 
     // --- FUNCIONS AUXILIARS CÀMERA ---
 
@@ -320,19 +383,61 @@ class ProductFormActivity : AppCompatActivity() {
         }
 
         photoFile?.also {
+            // Guarda la ruta absoluta per a ús posterior (per a la còpia de fitxers)
+            currentTempPhotoPath = it.absolutePath
+
             val photoURI: Uri = FileProvider.getUriForFile(
                 this,
                 "${packageName}.fileprovider",
                 it
             )
-            tempPhotoUri = photoURI
             cameraLauncher.launch(photoURI)
         }
+    }
+
+    // Funció per COPIAR la imatge des d'una RUTA ABSOLUTA (ús Càmera)
+    private fun copyFileToLocalFile(sourcePath: String): String? {
+        val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val sourceFile = File(sourcePath)
+        val fileName = "prod_${streamerId}_${timeStamp}.jpg"
+        val destinationFile = File(filesDir, fileName)
+
+        Log.d("CameraCopy", "Intentant copiar fitxer des de: $sourcePath")
+
+        if (!sourceFile.exists()) {
+            Log.e("CameraCopy", "Fitxer d'origen temporal no trobat a: $sourcePath")
+            return null
+        }
+
+        try {
+            FileInputStream(sourceFile).use { inputStream ->
+                FileOutputStream(destinationFile).use { outputStream ->
+                    inputStream.copyTo(outputStream)
+
+                    val fileSize = destinationFile.length()
+                    // Després de copiar, esborrem el fitxer temporal!
+                    val deleted = sourceFile.delete()
+                    Log.d("CameraCopy", "Fitxer copiat correctament. Mida: $fileSize bytes. Esborrat temporal: $deleted")
+
+                    // Si el fitxer es va copiar però té mida zero
+                    if (fileSize == 0L) {
+                        Log.e("CameraCopy", "ADVERTÈNCIA: El fitxer copiat té una mida de 0 bytes.")
+                    }
+
+                    return destinationFile.absolutePath
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("CameraCopy", "Error copiant fitxer: ${e.message}")
+            e.printStackTrace()
+        }
+        return null
     }
 
     @Throws(IOException::class)
     private fun crearFitxerImatge(): File {
         val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        // El fitxer es crea a l'emmagatzematge extern específic de l'aplicació, al subdirectori Pictures
         val storageDir: File? = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
         return File.createTempFile("JPEG_${timeStamp}_", ".jpg", storageDir)
     }
