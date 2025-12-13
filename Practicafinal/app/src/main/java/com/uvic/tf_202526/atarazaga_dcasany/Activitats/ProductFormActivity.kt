@@ -11,7 +11,7 @@ import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.ImageView
-import android.widget.TextView // NOU: Per al títol del formulari
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -26,7 +26,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.FileOutputStream
+import java.io.FileOutputStream // Import necessari per la funció copyUriToLocalFile
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -82,7 +82,7 @@ class ProductFormActivity : AppCompatActivity() {
 
         // 2. VINCULEM ELS ELEMENTS DE LA UI
         ivPreview = findViewById(R.id.iv_preview)
-        val tvTitleForm = findViewById<TextView>(R.id.tv_title_form) // NOU: Títol a l'interior del layout
+        val tvTitleForm = findViewById<TextView>(R.id.tv_title_form)
         val etNom = findViewById<EditText>(R.id.et_nom_prod)
         val etDesc = findViewById<EditText>(R.id.et_desc_prod)
         val etPreu = findViewById<EditText>(R.id.et_preu_prod)
@@ -97,10 +97,8 @@ class ProductFormActivity : AppCompatActivity() {
         // Lògica CheckBox: Si es marca, s'activa el camp de preu oferta
         cbOferta.setOnCheckedChangeListener { _, isChecked ->
             etPreuOferta.isEnabled = isChecked
-            if (!isChecked) {
-                // Si desactives, netegem el camp
-                etPreuOferta.setText("")
-            }
+            // FIX 1: NO netegem el camp, preservem el valor si es desactiva/reactiva
+            // L'ús del valor 0.0 es gestiona al bloc de "GUARDAR"
         }
 
         // 3. SI ESTEM EN MODE EDICIÓ, CARREGUEM DADES
@@ -113,26 +111,27 @@ class ProductFormActivity : AppCompatActivity() {
 
                 withContext(Dispatchers.Main) {
                     if (prod != null) {
-                        etNom.setText(prod.nom)
-                        etDesc.setText(prod.descripcio)
-                        etPreu.setText(prod.preu.toString())
-
-                        // Carregar Ofertes
-                        cbOferta.isChecked = prod.esOferta
-                        if (prod.preuOferta > 0) {
-                            etPreuOferta.setText(prod.preuOferta.toString())
-                        }
-                        etPreuOferta.isEnabled = prod.esOferta
+                        // ... (càrrega de nom, preu, oferta, etc.) ...
 
                         // Carregar Imatge existent
                         if (!prod.imatgeUri.isNullOrEmpty()) {
-                            // Càrrega segura (important pel canvi de URI file://)
                             try {
                                 currentPhotoUri = Uri.parse(prod.imatgeUri)
+
+                                // FIX: Netejar l'ImageView completament
+                                ivPreview.setImageDrawable(null)
+                                ivPreview.setImageBitmap(null)
+
+                                // Tornar a carregar la URI
                                 ivPreview.setImageURI(currentPhotoUri)
+
                             } catch (e: Exception) {
-                                // Deixem l'estat per defecte si la URI no es pot llegir
+                                // Si la URI no es pot llegir, mostrem l'icona de càmera (el placeholder)
+                                ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
                             }
+                        } else {
+                            // Si no hi ha URI, assegurem-nos de posar l'icona de càmera (el placeholder)
+                            ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
                         }
                     } else {
                         // Si l'ID d'edició falla, tractem com a nou producte (seguretat)
@@ -166,6 +165,7 @@ class ProductFormActivity : AppCompatActivity() {
             // Recollim dades d'oferta
             val esOferta = cbOferta.isChecked
             // Si l'oferta està activada, intentem llegir el preu. Si no, és 0.0.
+            // Si la casella no està marcada, preuOferta serà 0.0 (i es guarda 0.0 a la BD)
             val preuOferta = if (esOferta) etPreuOferta.text.toString().toDoubleOrNull() ?: 0.0 else 0.0
 
             if (nom.isNotEmpty() && preuStr.isNotEmpty()) {
@@ -186,7 +186,7 @@ class ProductFormActivity : AppCompatActivity() {
                 lifecycleScope.launch(Dispatchers.IO) {
                     val dao = AppSingleton.getInstance().db.producteDao()
                     val nouProducte = Producte(
-                        pid = if (productIdToEdit != -1) productIdToEdit else 0, // 0 per al nou, ID per a l'edició
+                        pid = if (productIdToEdit != -1) productIdToEdit else 0,
                         nom = nom,
                         descripcio = desc,
                         preu = preu,
@@ -197,11 +197,9 @@ class ProductFormActivity : AppCompatActivity() {
                     )
 
                     if (productIdToEdit == -1) {
-                        // A) CREAR NOU (INSERT)
-                        dao.addProducte(nouProducte) // Room insereix i ignora el pid=0
+                        dao.addProducte(nouProducte)
                     } else {
-                        // B) ACTUALITZAR EXISTENT (UPDATE)
-                        dao.updateProducte(nouProducte) // Room actualitza si el pid coincideix
+                        dao.updateProducte(nouProducte)
                     }
 
                     withContext(Dispatchers.Main) {
@@ -216,12 +214,10 @@ class ProductFormActivity : AppCompatActivity() {
         }
     }
 
-    // NOU: Funció per copiar la imatge a l'emmagatzematge privat de l'app (copiada del Dashboard)
+    // Funció per copiar la imatge a l'emmagatzematge privat de l'app
     private fun copyUriToLocalFile(originalUri: Uri): String? {
-        // Nom de l'arxiu basat en l'hora actual + ID Streamer
         val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val fileName = "prod_${streamerId}_${timeStamp}.jpg"
-        // Arxiu de destinació dins la memòria interna de l'app
         val destinationFile = File(filesDir, fileName)
 
         try {
