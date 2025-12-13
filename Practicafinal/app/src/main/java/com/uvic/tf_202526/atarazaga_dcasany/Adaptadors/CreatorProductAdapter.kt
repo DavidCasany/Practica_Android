@@ -22,11 +22,12 @@ class CreatorProductAdapter(
     }
 
     class CreatorViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val ivImatge: ImageView = itemView.findViewById(R.id.iv_producte)
-        val tvNom: TextView = itemView.findViewById(R.id.tv_nom_prod)
-        val tvPreu: TextView = itemView.findViewById(R.id.tv_preu_prod)
-        val tvPreuOferta: TextView = itemView.findViewById(R.id.tv_preu_oferta_item)
-        val btnAccio: Button = itemView.findViewById(R.id.btn_afegir_carro)
+        val ivImatge: ImageView = itemView.findViewById(R.id.iv_producte_imatge) // FIX ID
+        val tvNom: TextView = itemView.findViewById(R.id.tv_producte_nom) // FIX ID
+        val tvPreuFinal: TextView = itemView.findViewById(R.id.tv_producte_preu) // FIX ID (Preu final)
+        val tvOfertaTag: TextView = itemView.findViewById(R.id.tv_producte_es_oferta) // NOU TAG OFERTA
+
+        // Eliminem la referència al botó i al preu d'oferta que ja no existeixen al layout.
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CreatorViewHolder {
@@ -34,50 +35,42 @@ class CreatorProductAdapter(
         return CreatorViewHolder(view)
     }
 
+
     override fun onBindViewHolder(holder: CreatorViewHolder, position: Int) {
         val prod = llista[position]
 
+        // 1. Dades de Text
         holder.tvNom.text = prod.nom
-        holder.tvPreu.text = "${prod.preu} €"
 
-        // --- LÒGICA D'OFERTA ---
-        if (prod.esOferta && prod.preuOferta > 0) {
-            // Està d'oferta: Ratllem el preu vell i mostrem el nou
-            holder.tvPreu.paintFlags = holder.tvPreu.paintFlags or android.graphics.Paint.STRIKE_THRU_TEXT_FLAG
-            holder.tvPreu.setTextColor(android.graphics.Color.GRAY) // Gris per al vell
+        // LÒGICA DE PREU: Utilitzem el preu final (oferta o normal)
+        val preuMostrar = if (prod.esOferta && prod.preuOferta > 0.0) prod.preuOferta else prod.preu
+        holder.tvPreuFinal.text = "${preuMostrar} €"
 
-            holder.tvPreuOferta.text = "${prod.preuOferta} €"
-            holder.tvPreuOferta.visibility = View.VISIBLE
-        } else {
-            // Normal: Restaurem l'estat original (importantíssim pel reciclatge de vistes)
-            holder.tvPreu.paintFlags = 0
-            holder.tvPreu.setTextColor(android.graphics.Color.parseColor("#388E3C")) // Verd original
-            holder.tvPreuOferta.visibility = View.GONE
-        }
-        // -----------------------
+        // Etiqueta OFERTA (visible/invisible)
+        holder.tvOfertaTag.visibility = if (prod.esOferta && prod.preuOferta > 0.0) View.VISIBLE else View.GONE
 
-        // Carreguem la imatge
+        // 2. Imatge
         if (!prod.imatgeUri.isNullOrEmpty()) {
             try {
                 holder.ivImatge.setImageURI(Uri.parse(prod.imatgeUri))
             } catch (e: Exception) {
-                holder.ivImatge.setImageResource(android.R.drawable.ic_menu_report_image)
+                // Codi a prova de crash si la URI és invàlida
+                holder.ivImatge.setImageResource(android.R.color.darker_gray)
             }
+        } else {
+            holder.ivImatge.setImageResource(android.R.color.darker_gray)
         }
 
-        // --- CANVI IMPORTANT ---
-        // Com que som creadors, el botó serà VERMELL i dirà ESBORRAR
-        holder.btnAccio.text = "ESBORRAR"
-        holder.btnAccio.setBackgroundColor(0xFFFF0000.toInt()) // Vermell (o fes servir colors.xml)
-
-        // Clic al botó -> Esborrar
-        holder.btnAccio.setOnClickListener {
-            listener.onDeleteClick(prod)
-        }
-
-        // Clic a la resta -> Editar (obrir formulari)
+        // 3. LISTENERS
+        // Clic NORMAL: Obre el formulari d'Edició
         holder.itemView.setOnClickListener {
             listener.onEditClick(prod)
+        }
+
+        // Clic LLARG: Obre el diàleg per Esborrar
+        holder.itemView.setOnLongClickListener {
+            listener.onDeleteClick(prod)
+            true // Retornem true per consumir l'esdeveniment i evitar que es propagui
         }
     }
 

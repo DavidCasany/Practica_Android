@@ -1,7 +1,6 @@
 package com.uvic.tf_202526.atarazaga_dcasany.Adaptadors
 
 import android.R.attr.onClick
-import android.icu.text.DecimalFormat
 import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
@@ -12,6 +11,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.uvic.tf_202526.atarazaga_dcasany.Entitats.Producte
 import com.uvic.tf_202526.atarazaga_dcasany.R
+import java.text.DecimalFormat
 import java.io.File
 
 class ProducteAdapter(
@@ -39,11 +39,11 @@ class ProducteAdapter(
 
     override fun onBindViewHolder(holder: ProducteViewHolder, position: Int) {
         val producte = llista[position]
-        val df = DecimalFormat("#,##0.00€")
+        val df = DecimalFormat("#,##0.00€") // Utilitzem java.text
 
         holder.tvNom.text = producte.nom
 
-        // Lògica d'Oferta
+        // Lògica d'Oferta (igual que abans, utilitzant el nou camp tv_producte_es_oferta)
         if (producte.esOferta && producte.preuOferta > 0.0) {
             holder.tvPreu.text = df.format(producte.preuOferta)
             holder.tvOferta.visibility = View.VISIBLE
@@ -63,7 +63,7 @@ class ProducteAdapter(
             holder.ivImage.setImageResource(android.R.color.darker_gray)
         }
 
-        holder.itemView.setOnClickListener {onClick(producte) }
+        holder.itemView.setOnClickListener { listener.onProducteClick(producte) }
     }
 
     override fun getItemCount(): Int = llista.size

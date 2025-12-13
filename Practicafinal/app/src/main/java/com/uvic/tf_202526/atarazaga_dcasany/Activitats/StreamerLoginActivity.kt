@@ -20,10 +20,10 @@ class StreamerLoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_streamer_login)
 
-        val etNom = findViewById<EditText>(R.id.et_usuari_streamer)
-        val etPass = findViewById<EditText>(R.id.et_pass_streamer)
-        val btnLogin = findViewById<Button>(R.id.btn_login_streamer)
-        val btnRegistre = findViewById<Button>(R.id.btn_registre_streamer)
+        val etNom = findViewById<EditText>(R.id.et_nom_usuari)
+        val etPass = findViewById<EditText>(R.id.et_password)
+        val btnLogin = findViewById<Button>(R.id.btn_login)
+        val btnRegistre = findViewById<Button>(R.id.btn_registre)
 
         // --- LOGIN STREAMER ---
         btnLogin.setOnClickListener {

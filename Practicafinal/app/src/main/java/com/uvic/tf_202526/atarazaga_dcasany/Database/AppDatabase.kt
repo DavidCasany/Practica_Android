@@ -11,8 +11,8 @@ import com.uvic.tf_202526.atarazaga_dcasany.Entitats.ItemCarro
 
 // 1. Definim les taules (Entitats) i la versió de la BD
 @Database(
-    entities = [Usuari::class, Producte::class, BotigaVisitada::class, ItemCarro::class],
-    version = 1, // Nota: Si ja has executat l'app, potser has de desinstal·lar-la perquè Room detecti el canvi de taules
+    entities = [Usuari::class, Producte::class, ItemCarro::class, BotigaVisitada::class],
+    version = 2, // <--- CANVI CLAU: INCREMENTEM LA VERSIÓ
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
