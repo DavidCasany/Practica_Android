@@ -31,6 +31,7 @@ import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import android.graphics.BitmapFactory // <-- IMPORT NECESSARI
 
 class ProductFormActivity : AppCompatActivity() {
 
@@ -51,7 +52,6 @@ class ProductFormActivity : AppCompatActivity() {
     // LAUNCHER GALERIA
     private val galleryLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
-            // CORRECCIÓ: Utilitzem la còpia de fitxer intern que ja vam implementar al Dashboard
             lifecycleScope.launch(Dispatchers.IO) {
                 val localUriString = copyUriToLocalFile(uri)
                 withContext(Dispatchers.Main) {
@@ -97,8 +97,7 @@ class ProductFormActivity : AppCompatActivity() {
         // Lògica CheckBox: Si es marca, s'activa el camp de preu oferta
         cbOferta.setOnCheckedChangeListener { _, isChecked ->
             etPreuOferta.isEnabled = isChecked
-            // FIX 1: NO netegem el camp, preservem el valor si es desactiva/reactiva
-            // L'ús del valor 0.0 es gestiona al bloc de "GUARDAR"
+            // El valor es preserva automàticament
         }
 
         // 3. SI ESTEM EN MODE EDICIÓ, CARREGUEM DADES
@@ -111,26 +110,40 @@ class ProductFormActivity : AppCompatActivity() {
 
                 withContext(Dispatchers.Main) {
                     if (prod != null) {
-                        // ... (càrrega de nom, preu, oferta, etc.) ...
+                        // 3a. Carregar Dades de Text
+                        etNom.setText(prod.nom)
+                        etDesc.setText(prod.descripcio)
+                        etPreu.setText(prod.preu.toString())
 
-                        // Carregar Imatge existent
+                        // FIX 2: Carregar Ofertes
+                        cbOferta.isChecked = prod.esOferta
+                        if (prod.preuOferta > 0) {
+                            etPreuOferta.setText(prod.preuOferta.toString())
+                        } else {
+                            // Si el preu és 0, assegurem que el camp estigui buit, no "0.0"
+                            etPreuOferta.setText("")
+                        }
+                        // L'habilitació depèn del CheckBox, però el text està fixat.
+                        etPreuOferta.isEnabled = prod.esOferta
+
+                        // FIX 1: Carregar Imatge amb BitmapFactory (més robust)
                         if (!prod.imatgeUri.isNullOrEmpty()) {
                             try {
                                 currentPhotoUri = Uri.parse(prod.imatgeUri)
 
-                                // FIX: Netejar l'ImageView completament
-                                ivPreview.setImageDrawable(null)
-                                ivPreview.setImageBitmap(null)
-
-                                // Tornar a carregar la URI
-                                ivPreview.setImageURI(currentPhotoUri)
+                                // Carrega la imatge com a Bitmap, evitant problemes de permisos de URI
+                                contentResolver.openInputStream(currentPhotoUri!!)?.use { stream ->
+                                    val bitmap = BitmapFactory.decodeStream(stream)
+                                    ivPreview.setImageBitmap(bitmap)
+                                } ?: run {
+                                    ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
+                                }
 
                             } catch (e: Exception) {
-                                // Si la URI no es pot llegir, mostrem l'icona de càmera (el placeholder)
+                                e.printStackTrace()
                                 ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
                             }
                         } else {
-                            // Si no hi ha URI, assegurem-nos de posar l'icona de càmera (el placeholder)
                             ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
                         }
                     } else {
@@ -143,7 +156,6 @@ class ProductFormActivity : AppCompatActivity() {
             }
         } else {
             tvTitleForm.text = "Nou Producte"
-            // Deixem el camp d'oferta desactivat per defecte
             etPreuOferta.isEnabled = false
         }
 
@@ -164,8 +176,7 @@ class ProductFormActivity : AppCompatActivity() {
 
             // Recollim dades d'oferta
             val esOferta = cbOferta.isChecked
-            // Si l'oferta està activada, intentem llegir el preu. Si no, és 0.0.
-            // Si la casella no està marcada, preuOferta serà 0.0 (i es guarda 0.0 a la BD)
+            // Si l'oferta està activada, utilitzem el preu del camp. Si no, és 0.0.
             val preuOferta = if (esOferta) etPreuOferta.text.toString().toDoubleOrNull() ?: 0.0 else 0.0
 
             if (nom.isNotEmpty() && preuStr.isNotEmpty()) {
