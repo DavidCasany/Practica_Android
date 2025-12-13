@@ -39,7 +39,7 @@ class StreamerLoginActivity : AppCompatActivity() {
                             if (usuari.esStreamer) {
                                 anarAlDashboard(usuari)
                             } else {
-                                Toast.makeText(this@StreamerLoginActivity, "Ets un espectador! Ves a l'altra pantalla.", Toast.LENGTH_LONG).show()
+                                Toast.makeText(this@StreamerLoginActivity, "Ets un espectador! Ves a la pantalla de Viewer.", Toast.LENGTH_LONG).show()
                             }
                         } else {
                             Toast.makeText(this@StreamerLoginActivity, "Dades incorrectes", Toast.LENGTH_SHORT).show()
@@ -59,7 +59,7 @@ class StreamerLoginActivity : AppCompatActivity() {
                     val dao = AppSingleton.getInstance().db.usuariDao()
 
                     if (dao.getUsuariByNom(nom) == null) {
-                        // AQUÍ ESTÀ LA CLAU: esStreamer = true
+                        // Creem i afegim el nou streamer
                         val nouStreamer = Usuari(nom = nom, contrasenya = pass, esStreamer = true)
                         dao.addUsuari(nouStreamer)
 
@@ -78,11 +78,26 @@ class StreamerLoginActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * CORRECCIÓ CLAU: Guardar l'ID com a USER_ID a SharedPreferences
+     * i passar la flag IS_STREAMER.
+     * Això garanteix que les pantalles com CreatorDashboardActivity i altres
+     * puguin carregar dades correctament a l'inici.
+     */
     private fun anarAlDashboard(usuari: Usuari) {
         val prefs = getSharedPreferences("MerchStreamPrefs", MODE_PRIVATE)
-        prefs.edit().putInt("STREAMER_ID", usuari.uid).apply()
+        prefs.edit().apply {
+            // AQUESTA LÍNIA ÉS CLAU: Guarda l'ID sota la clau que fan servir totes les activitats
+            putInt("USER_ID", usuari.uid)
+
+            // També guardem STREAMER_ID i la flag (per seguretat i claredat)
+            putInt("STREAMER_ID", usuari.uid)
+            putBoolean("IS_STREAMER", true)
+            apply()
+        }
 
         val intent = Intent(this, CreatorDashboardActivity::class.java)
+        // Passem la ID via Intent per si l'activitat la necessita immediatament
         intent.putExtra("STREAMER_ID", usuari.uid)
         startActivity(intent)
         finish()

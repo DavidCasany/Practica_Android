@@ -32,13 +32,30 @@
             android:maxLines="1"
             android:ellipsize="end"/>
 
-        <TextView
-            android:id="@+id/tv_preu_prod"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="20.00 €"
-            android:textColor="#388E3C"
-            android:textStyle="bold"/>
+            android:orientation="horizontal"
+            android:layout_marginTop="4dp">
+
+            <TextView
+                android:id="@+id/tv_preu_prod"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="20.00 €"
+                android:textColor="#388E3C"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/tv_preu_oferta_item"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="15.00 €"
+                android:textColor="#D32F2F"
+                android:textStyle="bold"
+                android:layout_marginStart="8dp"
+                android:visibility="gone"/>
+        </LinearLayout>
 
         <Button
             android:id="@+id/btn_afegir_carro"

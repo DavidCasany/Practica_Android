@@ -1,33 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Activitats.StoreActivity">
+    android:background="#F5F5F5">
+
+    <ImageView
+        android:id="@+id/iv_store_banner"
+        android:layout_width="0dp"
+        android:layout_height="200dp"
+        android:src="@color/design_default_color_primary"
+        android:scaleType="centerCrop"
+        android:contentDescription="Banner de la botiga"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="80dp"
+        android:background="@drawable/gradient_bottom_overlay"
+        app:layout_constraintBottom_toBottomOf="@id/iv_store_banner"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+    <TextView
+        android:id="@+id/tv_store_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Carregant nom..."
+        android:textColor="#FFFFFF"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:shadowColor="#000000"
+        android:shadowDx="2"
+        android:shadowDy="2"
+        android:shadowRadius="4"
+        android:padding="16dp"
+        app:layout_constraintBottom_toBottomOf="@id/iv_store_banner"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_productes_botiga"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:padding="4dp"
+        android:padding="8dp"
         android:clipToPadding="false"
+        app:layout_constraintTop_toBottomOf="@id/iv_store_banner"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_view_cart"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="24dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:contentDescription="Veure Carretó"
         android:src="@android:drawable/ic_menu_agenda"
         app:backgroundTint="#FF9800"
         app:tint="#FFFFFF"
+        app:elevation="6dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 

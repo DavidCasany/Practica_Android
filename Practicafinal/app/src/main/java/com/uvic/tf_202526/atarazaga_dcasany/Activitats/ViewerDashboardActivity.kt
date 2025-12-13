@@ -38,7 +38,7 @@ class ViewerDashboardActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_viewer_dashboard)
 
-        rvBotigues = findViewById(R.id.rv_botigues)
+        rvBotigues = findViewById(R.id.rv_botigues_visitades)
         rvBotigues.layoutManager = LinearLayoutManager(this)
 
         val btnScan = findViewById<FloatingActionButton>(R.id.fab_scan_qr)
@@ -123,16 +123,25 @@ class ViewerDashboardActivity : AppCompatActivity() {
 
     private fun carregarBotigues() {
         lifecycleScope.launch(Dispatchers.IO) {
-            val llistaBotigues = AppSingleton.getInstance().db.botigaVisitadaDao().getVisitesByEspectador(userId)
+            // 1. Cridem a la nova Query que fa el JOIN
+            val llistaBotigues = AppSingleton.getInstance().db.botigaVisitadaDao().getBotiguesAmbDetall(userId)
 
             withContext(Dispatchers.Main) {
-                val adapter = BotigaAdapter(llistaBotigues, object : BotigaAdapter.OnItemClickListener {
-                    override fun onItemClick(botiga: BotigaVisitada) {
-                        val intent = Intent(this@ViewerDashboardActivity, StoreActivity::class.java)
-                        intent.putExtra("STREAMER_ID", botiga.idStreamer)
-                        startActivity(intent)
-                    }
-                })
+                if (llistaBotigues.isEmpty()) {
+                    // Opcional: Mostrar text "No tens botigues"
+                }
+
+                // 2. Configurem l'adaptador amb la nova llista de 'BotigaDisplay'
+                val adapter = BotigaAdapter(llistaBotigues) { botigaClickada ->
+
+                    // Quan cliquem, obrim la botiga passant la ID
+                    val intent = Intent(this@ViewerDashboardActivity, StoreActivity::class.java)
+                    intent.putExtra("STREAMER_ID", botigaClickada.idStreamer)
+                    startActivity(intent)
+                }
+
+                // Assegura't que el teu RecyclerView es diu 'rvBotigues' o similar
+                val rvBotigues = findViewById<RecyclerView>(R.id.rv_botigues_visitades)
                 rvBotigues.adapter = adapter
             }
         }

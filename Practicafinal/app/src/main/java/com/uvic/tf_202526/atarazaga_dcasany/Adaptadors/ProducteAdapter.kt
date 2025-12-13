@@ -26,6 +26,7 @@ class ProducteAdapter(
         val ivImatge: ImageView = itemView.findViewById(R.id.iv_producte)
         val tvNom: TextView = itemView.findViewById(R.id.tv_nom_prod)
         val tvPreu: TextView = itemView.findViewById(R.id.tv_preu_prod)
+        val tvPreuOferta: TextView = itemView.findViewById(R.id.tv_preu_oferta_item) // NOU
         val btnAfegir: Button = itemView.findViewById(R.id.btn_afegir_carro)
     }
 
@@ -40,13 +41,26 @@ class ProducteAdapter(
         holder.tvNom.text = prod.nom
         holder.tvPreu.text = "${prod.preu} €"
 
-        // Carregar imatge si existeix
+        // --- LÒGICA D'OFERTA ---
+        if (prod.esOferta && prod.preuOferta > 0) {
+            // Està d'oferta: Ratllem el preu vell i mostrem el nou
+            holder.tvPreu.paintFlags = holder.tvPreu.paintFlags or android.graphics.Paint.STRIKE_THRU_TEXT_FLAG
+            holder.tvPreu.setTextColor(android.graphics.Color.GRAY) // Gris per al vell
+
+            holder.tvPreuOferta.text = "${prod.preuOferta} €"
+            holder.tvPreuOferta.visibility = View.VISIBLE
+        } else {
+            // Normal: Restaurem l'estat original (importantíssim pel reciclatge de vistes)
+            holder.tvPreu.paintFlags = 0
+            holder.tvPreu.setTextColor(android.graphics.Color.parseColor("#388E3C")) // Verd original
+            holder.tvPreuOferta.visibility = View.GONE
+        }
+        // -----------------------
+
         if (!prod.imatgeUri.isNullOrEmpty()) {
-            try {
-                holder.ivImatge.setImageURI(Uri.parse(prod.imatgeUri))
-            } catch (e: Exception) {
-                holder.ivImatge.setImageResource(android.R.drawable.ic_menu_report_image)
-            }
+            holder.ivImatge.setImageURI(Uri.parse(prod.imatgeUri))
+        } else {
+            holder.ivImatge.setImageResource(android.R.drawable.ic_menu_gallery)
         }
 
         holder.itemView.setOnClickListener { listener.onProducteClick(prod) }

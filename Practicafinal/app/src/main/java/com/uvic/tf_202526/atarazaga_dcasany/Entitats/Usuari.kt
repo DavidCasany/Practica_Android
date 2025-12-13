@@ -16,5 +16,8 @@ data class Usuari(
     val contrasenya: String,
 
     @ColumnInfo(name = "es_streamer")
-    val esStreamer: Boolean
+    val esStreamer: Boolean,
+
+    @ColumnInfo(name = "banner_uri")
+    val bannerUri: String? = null
 )

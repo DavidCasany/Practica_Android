@@ -23,7 +23,7 @@ class CartActivity : AppCompatActivity() {
     private lateinit var tvTotal: TextView
     private var userId: Int = -1
 
-    // --- CORRECCIÓ: Variable de classe perquè sigui accessible a tot arreu ---
+    // Variable de classe accessible a tot arreu
     private var llistaCompra: List<CartItemDisplay> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,24 +47,60 @@ class CartActivity : AppCompatActivity() {
 
     private fun carregarCarro() {
         lifecycleScope.launch(Dispatchers.IO) {
-            // Guardem el resultat a la variable de classe 'llistaCompra'
             llistaCompra = AppSingleton.getInstance().db.carroDao().getCartItemsComplets(userId)
-
             val sumaTotal = llistaCompra.sumOf { it.preuTotal }
 
             withContext(Dispatchers.Main) {
-                if (llistaCompra.isEmpty()) {
-                    Toast.makeText(this@CartActivity, "El carretó està buit", Toast.LENGTH_SHORT).show()
-                }
+                // Instanciem l'adaptador amb la interfície pels botons
+                rvCart.adapter = CartAdapter(llistaCompra, object : CartAdapter.OnCartActionListener {
 
-                rvCart.adapter = CartAdapter(llistaCompra)
+                    // --- BOTÓ MENYS (-) ---
+                    override fun onMinusClick(item: CartItemDisplay) {
+                        gestionarResta(item)
+                    }
+
+                    // --- BOTÓ CREU (X) ---
+                    override fun onDeleteClick(item: CartItemDisplay) {
+                        gestionarEliminar(item)
+                    }
+                })
+
                 tvTotal.text = "Total: $sumaTotal €"
+
+                if (llistaCompra.isEmpty()) {
+                    Toast.makeText(this@CartActivity, "El carretó és buit", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
 
+    // --- FUNCIONS AUXILIARS DE GESTIÓ ---
+
+    private fun gestionarResta(item: CartItemDisplay) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            if (item.quantitat > 1) {
+                // Si en tenim més d'1, restem
+                AppSingleton.getInstance().db.carroDao().decrementQuantitat(item.idItemCarro)
+            } else {
+                // Si en queda 1 i restem, l'eliminem del tot
+                AppSingleton.getInstance().db.carroDao().deleteItemById(item.idItemCarro)
+            }
+            // IMPORTANT: Tornem a carregar la llista per veure els canvis
+            carregarCarro()
+        }
+    }
+
+    private fun gestionarEliminar(item: CartItemDisplay) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            // Eliminem directament
+            AppSingleton.getInstance().db.carroDao().deleteItemById(item.idItemCarro)
+            carregarCarro()
+        }
+    }
+
+    // --- FUNCIONS DE PAGAMENT ---
+
     private fun finalitzarCompra() {
-        // Calculem el total usant la variable de classe 'llistaCompra'
         val total = llistaCompra.sumOf { it.preuTotal }
 
         if (total <= 0.0) {
@@ -72,62 +108,46 @@ class CartActivity : AppCompatActivity() {
             return
         }
 
-        // Diàleg de confirmació (Simulació de Passarel·la de Pagament)
+        // Diàleg de confirmació
         AlertDialog.Builder(this)
             .setTitle("Passarel·la de Pagament")
             .setMessage("L'import total és de $total €.\n\nVols procedir al pagament?")
             .setIcon(android.R.drawable.ic_dialog_info)
             .setPositiveButton("PAGAR ARA") { _, _ ->
-                ferPagamentReal(total)
+                processarPagament(total) // Cridem la funció unificada
             }
             .setNegativeButton("Cancel·lar", null)
             .show()
     }
 
-    private fun ferPagamentReal(importPagat: Double) {
-        // Simulació de "Processant..."
+    private fun processarPagament(total: Double) {
+        // Feedback immediat
         Toast.makeText(this, "Connectant amb el banc...", Toast.LENGTH_SHORT).show()
 
         lifecycleScope.launch(Dispatchers.IO) {
-            // Aquí podríem guardar la comanda a un historial...
+            // 1. Aquí podries guardar la comanda (Orders)
 
-            // 1. Buidem el carro
+            // 2. Buidem el carro de la BD
             AppSingleton.getInstance().db.carroDao().buidarCarro(userId)
 
-            // 2. Esperem 2 segons per donar realisme
-            Thread.sleep(2000)
-
-            withContext(Dispatchers.Main) {
-                // 3. Feedback a l'usuari
-                Toast.makeText(this@CartActivity, "✅ Pagament de $importPagat € acceptat!", Toast.LENGTH_LONG).show()
-
-                // 4. Refresquem la pantalla (ara buida)
-                llistaCompra = emptyList()
-                rvCart.adapter = CartAdapter(llistaCompra)
-                tvTotal.text = "Total: 0.0 €"
-
-                // Opcional: Tancar l'activitat per tornar a la botiga
-                // finish()
-            }
-        }
-    }
-
-    private fun processarPagament(total: Double) {
-        lifecycleScope.launch(Dispatchers.IO) {
-            // 1. Aquí podries guardar la comanda en una taula 'orders_table' si volguessis
-
-            // 2. Buidem el carro perquè ja s'ha pagat
-            AppSingleton.getInstance().db.carroDao().buidarCarro(userId)
+            // Simulació d'espera (opcional, per realisme)
+            Thread.sleep(1500)
 
             withContext(Dispatchers.Main) {
                 Toast.makeText(this@CartActivity, "✅ Pagament de ${total}€ rebut. Gràcies!", Toast.LENGTH_LONG).show()
 
-                // Actualitzem la pantalla (es quedarà buida)
+                // 3. Actualitzem la pantalla (es quedarà buida)
                 llistaCompra = emptyList()
-                rvCart.adapter = CartAdapter(llistaCompra)
                 tvTotal.text = "Total: 0.0 €"
 
-                // Opcional: Tancar la pantalla i tornar a la botiga
+                // CORRECCIÓ CLAU: Passem un listener buit, perquè l'adaptador l'exigeix
+                // encara que la llista sigui buida.
+                rvCart.adapter = CartAdapter(llistaCompra, object : CartAdapter.OnCartActionListener {
+                    override fun onMinusClick(item: CartItemDisplay) {}
+                    override fun onDeleteClick(item: CartItemDisplay) {}
+                })
+
+                // Opcional: Si vols que surti de la pantalla al acabar:
                 // finish()
             }
         }

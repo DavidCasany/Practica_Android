@@ -26,4 +26,7 @@ interface UsuariDao {
 
     @Query("SELECT * FROM usuaris_table WHERE uid = :id")
     suspend fun getUsuariById(id: Int): Usuari?
+
+    @Query("UPDATE usuaris_table SET banner_uri = :uri WHERE uid = :id")
+    suspend fun updateBanner(id: Int, uri: String)
 }

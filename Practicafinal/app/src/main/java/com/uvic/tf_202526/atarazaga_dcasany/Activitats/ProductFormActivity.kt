@@ -88,7 +88,6 @@ class ProductFormActivity : AppCompatActivity() {
         // Lògica CheckBox: Si es marca, s'activa el camp de preu oferta
         cbOferta.setOnCheckedChangeListener { _, isChecked ->
             etPreuOferta.isEnabled = isChecked
-            if (!isChecked) etPreuOferta.text.clear()
         }
 
         // 3. SI ESTEM EN MODE EDICIÓ, CARREGUEM DADES

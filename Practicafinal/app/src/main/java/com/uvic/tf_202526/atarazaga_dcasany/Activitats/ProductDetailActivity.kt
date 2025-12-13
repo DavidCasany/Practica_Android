@@ -13,6 +13,7 @@ import androidx.lifecycle.lifecycleScope
 import com.uvic.tf_202526.atarazaga_dcasany.Entitats.Producte
 import com.uvic.tf_202526.atarazaga_dcasany.R
 import com.uvic.tf_202526.atarazaga_dcasany.Apps.AppSingleton
+import com.uvic.tf_202526.atarazaga_dcasany.Entitats.ItemCarro
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -80,10 +81,30 @@ class ProductDetailActivity : AppCompatActivity() {
         }
     }
 
-    private fun afegirAlCarro(prod: Producte) {
-        // ... (Copia aquí la mateixa lògica de l'afegirAlCarro que teníem a StoreActivity)
-        // La diferència és que ara ho fem des del detall.
-        Toast.makeText(this, "Afegint...", Toast.LENGTH_SHORT).show()
-        // Recorda implementar la crida al DAO aquí!
+    private fun afegirAlCarro(producte: Producte) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val dao = AppSingleton.getInstance().db.carroDao()
+
+            // 1. Mirem si ja existeix aquest producte al carro de l'usuari
+            val itemExistent = dao.getItemSpecific(userId, producte.pid)
+
+            if (itemExistent != null) {
+                // Si ja hi és, sumem +1
+                itemExistent.quantitat += 1
+                dao.updateItem(itemExistent)
+            } else {
+                // Si no hi és, el creem
+                val nouItem = ItemCarro(
+                    idUsuari = userId,
+                    idProducte = producte.pid,
+                    quantitat = 1
+                )
+                dao.insertItem(nouItem)
+            }
+
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@ProductDetailActivity, "✅ Afegit al carro: ${producte.nom}", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 }

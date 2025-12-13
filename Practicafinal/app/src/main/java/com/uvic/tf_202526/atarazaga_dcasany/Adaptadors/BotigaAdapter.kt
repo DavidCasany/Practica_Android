@@ -1,45 +1,47 @@
 package com.uvic.tf_202526.atarazaga_dcasany.Adaptadors
 
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.uvic.tf_202526.atarazaga_dcasany.Entitats.BotigaVisitada
+import com.uvic.tf_202526.atarazaga_dcasany.Entitats.BotigaDisplay
 import com.uvic.tf_202526.atarazaga_dcasany.R
 
 class BotigaAdapter(
-    private val llista: List<BotigaVisitada>,
-    private val listener: OnItemClickListener // Aquí demanem algú que implementi la interfície
+    private val llista: List<BotigaDisplay>, // <--- FIXA'T: Ara fem servir la nova classe
+    private val onClick: (BotigaDisplay) -> Unit
 ) : RecyclerView.Adapter<BotigaAdapter.BotigaViewHolder>() {
 
-    // --- AQUESTA ÉS LA INTERFÍCIE QUE DÓNA ERROR ---
-    // Ha d'estar definida DINS de la classe BotigaAdapter
-    interface OnItemClickListener {
-        fun onItemClick(botiga: BotigaVisitada)
-    }
-    // ----------------------------------------------
-
-    class BotigaViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val tvNom: TextView = itemView.findViewById(R.id.tv_nom_botiga)
-        val tvData: TextView = itemView.findViewById(R.id.tv_data_visita)
+    class BotigaViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val ivBanner: ImageView = view.findViewById(R.id.iv_streamer_banner_thumb)
+        val tvNom: TextView = view.findViewById(R.id.tv_streamer_name)
+        // Si el teu layout de fila (item_botiga.xml) té una imatge, posa-la aquí.
+        // Si fas servir 'simple_list_item_1', no tindràs imatge a la llista, només text.
+        // Per fer-ho bé, assumirem que fas servir un layout simple per ara i mostrem el NOM REAL.
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BotigaViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_botiga, parent, false)
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_streamer_row, parent, false)
         return BotigaViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: BotigaViewHolder, position: Int) {
-        val item = llista[position]
+        val botiga = llista[position]
 
-        holder.tvNom.text = "Botiga #${item.idStreamer}"
-        holder.tvData.text = "ID Visita: ${item.id}"
+        holder.tvNom.text = "Botiga de ${botiga.nomStreamer}"
 
-        // Aquí cridem al mètode de la interfície quan es fa clic
-        holder.itemView.setOnClickListener {
-            listener.onItemClick(item)
+        // Lògica per carregar el mini-banner
+        if (!botiga.bannerUri.isNullOrEmpty()) {
+            holder.ivBanner.setImageURI(Uri.parse(botiga.bannerUri))
+        } else {
+            holder.ivBanner.setImageResource(android.R.drawable.ic_menu_gallery)
         }
+
+        holder.itemView.setOnClickListener { onClick(botiga) }
     }
 
     override fun getItemCount(): Int = llista.size

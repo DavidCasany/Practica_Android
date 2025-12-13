@@ -28,7 +28,13 @@ interface CarroDao {
     suspend fun getCarroByUser(userId: Int): List<ItemCarro>
 
     // Aquesta Query màgica uneix les dues taules
-    @Query("SELECT P.nom as nomProducte, P.preu as preuUnitari, C.quantitat as quantitat, C.id as idItemCarro " +
+    @Query("SELECT " +
+            "P.nom as nomProducte, " +
+            "P.preu as preuOriginal, " +  // Ara mapegem a 'preuOriginal'
+            "C.quantitat as quantitat, " +
+            "C.id as idItemCarro, " +
+            "P.es_oferta as esOferta, " +   // NOU: Agafem el booleà
+            "P.preu_oferta as preuOferta " + // NOU: Agafem el preu rebaixat
             "FROM items_carro_table C " +
             "INNER JOIN productes_table P ON C.id_producte = P.pid " +
             "WHERE C.id_usuari = :userId")
@@ -37,4 +43,12 @@ interface CarroDao {
     // Per buidar el carro al final
     @Query("DELETE FROM items_carro_table WHERE id_usuari = :userId")
     suspend fun buidarCarro(userId: Int)
+
+    // NOU: Esborrar un item concret per la seva ID (la ID de la línia del carro, no del producte)
+    @Query("DELETE FROM items_carro_table WHERE id = :idItemCarro")
+    suspend fun deleteItemById(idItemCarro: Int)
+
+    // NOU: Restar 1 a la quantitat
+    @Query("UPDATE items_carro_table SET quantitat = quantitat - 1 WHERE id = :idItemCarro")
+    suspend fun decrementQuantitat(idItemCarro: Int)
 }
