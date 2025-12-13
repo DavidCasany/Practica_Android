@@ -16,7 +16,8 @@ interface BotigaVisitadaDao {
     suspend fun addVisita(visita: BotigaVisitada)
 
     // Afegeix aquesta query
-    @Query("SELECT U.uid as idStreamer, U.nom_usuari as nomStreamer, U.banner_uri as bannerUri " +
+    @Query("SELECT U.uid as idStreamer, U.nom_usuari as nomStreamer, U.banner_uri as bannerUri, " +
+            "B.data_visita as dataVisita, B.id as idVisita " + // <--- CAMP ADDICIONAL
             "FROM botigues_visitades_table B " +
             "INNER JOIN usuaris_table U ON B.id_streamer = U.uid " +
             "WHERE B.id_espectador = :userId")

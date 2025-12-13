@@ -3,6 +3,7 @@ package com.uvic.tf_202526.atarazaga_dcasany.Activitats
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -21,19 +22,23 @@ import kotlinx.coroutines.withContext
 
 class CreatorDashboardActivity : AppCompatActivity() {
 
-    // IMPORTANT: No cal 'lateinit' si inicialitzem a onCreate
     private var streamerId: Int = -1
-    private lateinit var rvProductes: RecyclerView // Mantenim lateinit i l'inicialitzem a onCreate
+    private lateinit var rvProductes: RecyclerView
     private lateinit var ivBanner: ImageView
 
-    // Launcher de Galeria
+    // Launcher de Galeria AMB PERSISTÈNCIA DE PERMISOS
     private val bannerLauncher = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
-            // 1. Visualitzar i 2. Persistència de permisos
             ivBanner.setImageURI(uri)
-            try { contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) } catch (e: Exception) {}
 
-            // 3. Guardar a la BD
+            // CORRECCIÓ CLAU: Fem persistent l'URI
+            try {
+                val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                contentResolver.takePersistableUriPermission(uri, flags)
+            } catch (e: Exception) {
+                Toast.makeText(this, "Permisos d'imatge no guardats permanentment.", Toast.LENGTH_LONG).show()
+            }
+
             guardarBannerBD(uri.toString())
         }
     }
@@ -42,24 +47,24 @@ class CreatorDashboardActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_creator_dashboard)
 
-        // --- 1. RECERCA DE LA ID (Prioritzem Intent, sinó Preferències) ---
+        // --- 1. RECERCA DE LA ID (Millorada per evitar crashes) ---
         streamerId = intent.getIntExtra("STREAMER_ID", -1)
         if (streamerId == -1) {
             val prefs = getSharedPreferences("MerchStreamPrefs", MODE_PRIVATE)
+            // Utilitzem l'ID genèrica guardada al login
             streamerId = prefs.getInt("USER_ID", -1)
         }
 
         if (streamerId == -1) {
-            Toast.makeText(this, "Error: No s'ha pogut carregar l'usuari Streamer. ID no trobada.", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Error: No s'ha pogut carregar l'usuari Streamer. Sessió invàlida.", Toast.LENGTH_LONG).show()
             finish()
             return
         }
 
         Toast.makeText(this, "Dashboard carregat. ID: $streamerId", Toast.LENGTH_SHORT).show()
-        title = "Gestió de Productes"
 
         // --- 2. INICIALITZACIÓ DE VISTES ---
-        rvProductes = findViewById(R.id.rv_els_meus_productes) // <--- Inicialització CLAU
+        rvProductes = findViewById(R.id.rv_els_meus_productes)
         rvProductes.layoutManager = GridLayoutManager(this, 2)
         ivBanner = findViewById(R.id.iv_dashboard_banner)
 
@@ -77,46 +82,43 @@ class CreatorDashboardActivity : AppCompatActivity() {
         }
 
         // --- 4. CÀRREGA INICIAL DE DADES ---
-        carregarDadesUsuari()
-        carregarElsMeusProductes() // <--- S'executa després que rvProductes estigui INICIALITZAT.
+        carregarDadesUsuari() // Càrrega el nom i el banner
+        carregarElsMeusProductes()
     }
 
     private fun carregarDadesUsuari() {
         lifecycleScope.launch(Dispatchers.IO) {
             val usuari = AppSingleton.getInstance().db.usuariDao().getUsuariById(streamerId)
             withContext(Dispatchers.Main) {
-                // S'assumeix que 'usuari.nom' és l'única clau vàlida per al nom
-                val nomStreamer = usuari?.nom ?: "Streamer"
-                title = "Botiga de $nomStreamer"
+                if (usuari != null) {
+                    // Posem el nom del streamer com a títol
+                    title = "Botiga de ${usuari.nom}"
 
-                // Càrrega segura del Banner (amb Uri.parse)
-                val bannerUriString = usuari?.bannerUri
-                if (!bannerUriString.isNullOrEmpty()) {
-                    try {
-                        ivBanner.setImageURI(Uri.parse(bannerUriString))
-                    } catch (e: Exception) {
-                        // En cas d'error de càrrega d'URI, posem un color gris genèric
+                    val bannerUriString = usuari.bannerUri
+                    if (!bannerUriString.isNullOrEmpty()) {
+                        // CORRECCIÓ: Protegim la càrrega de la imatge
+                        try {
+                            ivBanner.setImageURI(Uri.parse(bannerUriString))
+                        } catch (e: Exception) {
+                            // Si peta la URI (permissos trencats), mostrem el placeholder.
+                            ivBanner.setImageResource(android.R.color.darker_gray)
+                        }
+                    } else {
                         ivBanner.setImageResource(android.R.color.darker_gray)
                     }
-                } else {
-                    ivBanner.setImageResource(android.R.color.darker_gray)
                 }
             }
         }
     }
 
     private fun guardarBannerBD(uri: String) {
-        // ... (càrrega de dades correcte)
         lifecycleScope.launch(Dispatchers.IO) {
             AppSingleton.getInstance().db.usuariDao().updateBanner(streamerId, uri)
-            // Opcional: Refrescar la UI després de guardar (carregarDadesUsuari())
         }
     }
 
     override fun onResume() {
         super.onResume()
-        // Només refresquem la llista de productes quan tornem de ProductFormActivity
-        // RV ja està inicialitzat pel onCreate
         if (streamerId != -1) {
             carregarElsMeusProductes()
         }

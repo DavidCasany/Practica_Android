@@ -11,7 +11,7 @@
         android:id="@+id/iv_store_banner"
         android:layout_width="0dp"
         android:layout_height="200dp"
-        android:src="@color/design_default_color_primary"
+        android:src="@android:color/darker_gray"
         android:scaleType="centerCrop"
         android:contentDescription="Banner de la botiga"
         app:layout_constraintTop_toTopOf="parent"
