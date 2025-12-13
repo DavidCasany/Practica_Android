@@ -6,8 +6,8 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
-import android.provider.MediaStore
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Toast
@@ -35,11 +35,11 @@ class ProductFormActivity : AppCompatActivity() {
     private var currentPhotoUri: Uri? = null // Aquí guardarem la ruta de la foto final
     private var tempPhotoUri: Uri? = null    // Ruta temporal per a la càmera
     private var streamerId: Int = -1
+    private var productIdToEdit: Int = -1    // ID del producte si estem editant (-1 si és nou)
 
     // LAUNCHER CÀMERA
     private val cameraLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success) {
-            // Si la foto s'ha fet bé, la ruta temporal ara és la bona
             currentPhotoUri = tempPhotoUri
             ivPreview.setImageURI(currentPhotoUri)
         }
@@ -48,17 +48,12 @@ class ProductFormActivity : AppCompatActivity() {
     // LAUNCHER GALERIA
     private val galleryLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
-            // En galeria rebem directament la URI, però per persistència a vegades cal copiar-la
-            // Per simplificar, la farem servir directament (amb permisos de lectura persistents si calgués,
-            // però per la pràctica n'hi ha prou així)
             currentPhotoUri = uri
             ivPreview.setImageURI(uri)
-
-            // Permis de lectura persistent (per si reiniciem)
             try {
                 contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
             } catch (e: Exception) {
-                // Algunes versions d'Android no ho necessiten o no ho permeten igual
+                // Ignorar error en versions antigues
             }
         }
     }
@@ -67,9 +62,17 @@ class ProductFormActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_product_form)
 
+        // 1. RECUPEREM IDs DE L'INTENT
         streamerId = intent.getIntExtra("STREAMER_ID", -1)
-        if (streamerId == -1) finish()
+        productIdToEdit = intent.getIntExtra("PRODUCT_ID", -1)
 
+        // Si no tenim streamerId, alguna cosa ha anat malament
+        if (streamerId == -1) {
+            finish()
+            return
+        }
+
+        // 2. VINCULEM ELS ELEMENTS DE LA UI
         ivPreview = findViewById(R.id.iv_preview)
         val etNom = findViewById<EditText>(R.id.et_nom_prod)
         val etDesc = findViewById<EditText>(R.id.et_desc_prod)
@@ -78,47 +81,111 @@ class ProductFormActivity : AppCompatActivity() {
         val btnGaleria = findViewById<Button>(R.id.btn_galeria)
         val btnGuardar = findViewById<Button>(R.id.btn_guardar_prod)
 
-        // --- BOTÓ CÀMERA ---
-        btnCamera.setOnClickListener {
-            if (checkCameraPermission()) {
-                obrirCamera()
-            } else {
-                requestCameraPermission()
-            }
+        // --- NOUS CAMPS D'OFERTA (Dev B) ---
+        val cbOferta = findViewById<CheckBox>(R.id.cb_es_oferta)
+        val etPreuOferta = findViewById<EditText>(R.id.et_preu_oferta)
+
+        // Lògica CheckBox: Si es marca, s'activa el camp de preu oferta
+        cbOferta.setOnCheckedChangeListener { _, isChecked ->
+            etPreuOferta.isEnabled = isChecked
+            if (!isChecked) etPreuOferta.text.clear()
         }
 
-        // --- BOTÓ GALERIA ---
+        // 3. SI ESTEM EN MODE EDICIÓ, CARREGUEM DADES
+        if (productIdToEdit != -1) {
+            title = "Editar Producte"
+            btnGuardar.text = "ACTUALITZAR PRODUCTE"
+
+            lifecycleScope.launch(Dispatchers.IO) {
+                val prod = AppSingleton.getInstance().db.producteDao().getProducteById(productIdToEdit)
+
+                withContext(Dispatchers.Main) {
+                    if (prod != null) {
+                        etNom.setText(prod.nom)
+                        etDesc.setText(prod.descripcio)
+                        etPreu.setText(prod.preu.toString())
+
+                        // Carregar Ofertes
+                        cbOferta.isChecked = prod.esOferta
+                        if (prod.preuOferta > 0) {
+                            etPreuOferta.setText(prod.preuOferta.toString())
+                        }
+                        etPreuOferta.isEnabled = prod.esOferta
+
+                        // Carregar Imatge existent
+                        if (!prod.imatgeUri.isNullOrEmpty()) {
+                            currentPhotoUri = Uri.parse(prod.imatgeUri)
+                            ivPreview.setImageURI(currentPhotoUri)
+                        }
+                    }
+                }
+            }
+        } else {
+            title = "Nou Producte"
+        }
+
+        // --- BOTONS CÀMERA / GALERIA ---
+        btnCamera.setOnClickListener {
+            if (checkCameraPermission()) obrirCamera() else requestCameraPermission()
+        }
+
         btnGaleria.setOnClickListener {
             galleryLauncher.launch("image/*")
         }
 
-        // --- GUARDAR A LA BD ---
+        // --- GUARDAR (INSERT o UPDATE) ---
         btnGuardar.setOnClickListener {
             val nom = etNom.text.toString()
             val preuStr = etPreu.text.toString()
+            val desc = etDesc.text.toString()
+
+            // Recollim dades d'oferta
+            val esOferta = cbOferta.isChecked
+            val preuOferta = etPreuOferta.text.toString().toDoubleOrNull() ?: 0.0
 
             if (nom.isNotEmpty() && preuStr.isNotEmpty()) {
                 val preu = preuStr.toDoubleOrNull() ?: 0.0
-                val uriString = currentPhotoUri?.toString() // Convertim URI a String per guardar a Room
+                val uriString = currentPhotoUri?.toString()
 
                 lifecycleScope.launch(Dispatchers.IO) {
-                    val nouProducte = Producte(
-                        nom = nom,
-                        descripcio = etDesc.text.toString(),
-                        preu = preu,
-                        imatgeUri = uriString,
-                        idCreador = streamerId
-                    )
+                    val dao = AppSingleton.getInstance().db.producteDao()
 
-                    AppSingleton.getInstance().db.producteDao().addProducte(nouProducte)
+                    if (productIdToEdit == -1) {
+                        // A) CREAR NOU (INSERT)
+                        val nouProducte = Producte(
+                            nom = nom,
+                            descripcio = desc,
+                            preu = preu,
+                            imatgeUri = uriString,
+                            esOferta = esOferta,
+                            preuOferta = preuOferta,
+                            idCreador = streamerId
+                        )
+                        dao.addProducte(nouProducte)
+                    } else {
+                        // B) ACTUALITZAR EXISTENT (UPDATE)
+                        // Important: Mantenim la mateixa ID (pid)
+                        val prodEditat = Producte(
+                            pid = productIdToEdit,
+                            nom = nom,
+                            descripcio = desc,
+                            preu = preu,
+                            imatgeUri = uriString,
+                            esOferta = esOferta,
+                            preuOferta = preuOferta,
+                            idCreador = streamerId
+                        )
+                        dao.updateProducte(prodEditat)
+                    }
 
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(this@ProductFormActivity, "Producte Guardat!", Toast.LENGTH_SHORT).show()
-                        finish() // Tornem al dashboard
+                        val missatge = if (productIdToEdit == -1) "Creat correctament!" else "Actualitzat correctament!"
+                        Toast.makeText(this@ProductFormActivity, missatge, Toast.LENGTH_SHORT).show()
+                        finish()
                     }
                 }
             } else {
-                Toast.makeText(this, "Posa almenys nom i preu", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Nom i Preu són obligatoris", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -134,7 +201,6 @@ class ProductFormActivity : AppCompatActivity() {
     }
 
     private fun obrirCamera() {
-        // Creem un fitxer temporal buit per dir-li a la càmera on guardar la foto
         val photoFile: File? = try {
             crearFitxerImatge()
         } catch (ex: IOException) {
@@ -147,7 +213,7 @@ class ProductFormActivity : AppCompatActivity() {
                 "${packageName}.fileprovider",
                 it
             )
-            tempPhotoUri = photoURI // Guardem la referència
+            tempPhotoUri = photoURI
             cameraLauncher.launch(photoURI)
         }
     }

@@ -38,6 +38,29 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"/>
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="12dp"
+            android:background="#F5F5F5"
+            android:padding="8dp">
+
+            <CheckBox
+                android:id="@+id/cb_es_oferta"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Activar Oferta"/>
+
+            <EditText
+                android:id="@+id/et_preu_oferta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:hint="Preu Rebaixat (€)"
+                android:inputType="numberDecimal"
+                android:enabled="false"/> </LinearLayout>
         <TextView
             android:text="Imatge del producte"
             android:layout_marginTop="24dp"
