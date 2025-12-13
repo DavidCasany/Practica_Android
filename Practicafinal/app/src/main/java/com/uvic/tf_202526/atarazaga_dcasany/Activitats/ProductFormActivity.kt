@@ -4,12 +4,14 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import androidx.core.net.toUri
 import android.os.Bundle
 import android.os.Environment
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.TextView // NOU: Per al títol del formulari
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -24,6 +26,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -48,12 +51,18 @@ class ProductFormActivity : AppCompatActivity() {
     // LAUNCHER GALERIA
     private val galleryLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
-            currentPhotoUri = uri
-            ivPreview.setImageURI(uri)
-            try {
-                contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            } catch (e: Exception) {
-                // Ignorar error en versions antigues
+            // CORRECCIÓ: Utilitzem la còpia de fitxer intern que ja vam implementar al Dashboard
+            lifecycleScope.launch(Dispatchers.IO) {
+                val localUriString = copyUriToLocalFile(uri)
+                withContext(Dispatchers.Main) {
+                    if (localUriString != null) {
+                        currentPhotoUri = Uri.parse(localUriString)
+                        ivPreview.setImageURI(currentPhotoUri)
+                        Toast.makeText(this@ProductFormActivity, "Imatge copiada localment.", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(this@ProductFormActivity, "Error al copiar la imatge. Utilitza una imatge local.", Toast.LENGTH_LONG).show()
+                    }
+                }
             }
         }
     }
@@ -66,7 +75,6 @@ class ProductFormActivity : AppCompatActivity() {
         streamerId = intent.getIntExtra("STREAMER_ID", -1)
         productIdToEdit = intent.getIntExtra("PRODUCT_ID", -1)
 
-        // Si no tenim streamerId, alguna cosa ha anat malament
         if (streamerId == -1) {
             finish()
             return
@@ -74,6 +82,7 @@ class ProductFormActivity : AppCompatActivity() {
 
         // 2. VINCULEM ELS ELEMENTS DE LA UI
         ivPreview = findViewById(R.id.iv_preview)
+        val tvTitleForm = findViewById<TextView>(R.id.tv_title_form) // NOU: Títol a l'interior del layout
         val etNom = findViewById<EditText>(R.id.et_nom_prod)
         val etDesc = findViewById<EditText>(R.id.et_desc_prod)
         val etPreu = findViewById<EditText>(R.id.et_preu_prod)
@@ -81,18 +90,22 @@ class ProductFormActivity : AppCompatActivity() {
         val btnGaleria = findViewById<Button>(R.id.btn_galeria)
         val btnGuardar = findViewById<Button>(R.id.btn_guardar_prod)
 
-        // --- NOUS CAMPS D'OFERTA (Dev B) ---
+        // --- CAMPS D'OFERTA ---
         val cbOferta = findViewById<CheckBox>(R.id.cb_es_oferta)
         val etPreuOferta = findViewById<EditText>(R.id.et_preu_oferta)
 
         // Lògica CheckBox: Si es marca, s'activa el camp de preu oferta
         cbOferta.setOnCheckedChangeListener { _, isChecked ->
             etPreuOferta.isEnabled = isChecked
+            if (!isChecked) {
+                // Si desactives, netegem el camp
+                etPreuOferta.setText("")
+            }
         }
 
         // 3. SI ESTEM EN MODE EDICIÓ, CARREGUEM DADES
         if (productIdToEdit != -1) {
-            title = "Editar Producte"
+            tvTitleForm.text = "Editar Producte"
             btnGuardar.text = "ACTUALITZAR PRODUCTE"
 
             lifecycleScope.launch(Dispatchers.IO) {
@@ -113,14 +126,26 @@ class ProductFormActivity : AppCompatActivity() {
 
                         // Carregar Imatge existent
                         if (!prod.imatgeUri.isNullOrEmpty()) {
-                            currentPhotoUri = Uri.parse(prod.imatgeUri)
-                            ivPreview.setImageURI(currentPhotoUri)
+                            // Càrrega segura (important pel canvi de URI file://)
+                            try {
+                                currentPhotoUri = Uri.parse(prod.imatgeUri)
+                                ivPreview.setImageURI(currentPhotoUri)
+                            } catch (e: Exception) {
+                                // Deixem l'estat per defecte si la URI no es pot llegir
+                            }
                         }
+                    } else {
+                        // Si l'ID d'edició falla, tractem com a nou producte (seguretat)
+                        productIdToEdit = -1
+                        tvTitleForm.text = "Nou Producte"
+                        btnGuardar.text = "GUARDAR PRODUCTE"
                     }
                 }
             }
         } else {
-            title = "Nou Producte"
+            tvTitleForm.text = "Nou Producte"
+            // Deixem el camp d'oferta desactivat per defecte
+            etPreuOferta.isEnabled = false
         }
 
         // --- BOTONS CÀMERA / GALERIA ---
@@ -140,45 +165,47 @@ class ProductFormActivity : AppCompatActivity() {
 
             // Recollim dades d'oferta
             val esOferta = cbOferta.isChecked
-            val preuOferta = etPreuOferta.text.toString().toDoubleOrNull() ?: 0.0
+            // Si l'oferta està activada, intentem llegir el preu. Si no, és 0.0.
+            val preuOferta = if (esOferta) etPreuOferta.text.toString().toDoubleOrNull() ?: 0.0 else 0.0
 
             if (nom.isNotEmpty() && preuStr.isNotEmpty()) {
                 val preu = preuStr.toDoubleOrNull() ?: 0.0
+                if (preu <= 0.0) {
+                    Toast.makeText(this, "El preu ha de ser superior a 0.", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+
+                // Validació d'oferta: el preu rebaixat no pot ser superior al preu base
+                if (esOferta && preuOferta >= preu) {
+                    Toast.makeText(this, "El preu d'oferta no pot ser superior al preu base.", Toast.LENGTH_LONG).show()
+                    return@setOnClickListener
+                }
+
                 val uriString = currentPhotoUri?.toString()
 
                 lifecycleScope.launch(Dispatchers.IO) {
                     val dao = AppSingleton.getInstance().db.producteDao()
+                    val nouProducte = Producte(
+                        pid = if (productIdToEdit != -1) productIdToEdit else 0, // 0 per al nou, ID per a l'edició
+                        nom = nom,
+                        descripcio = desc,
+                        preu = preu,
+                        imatgeUri = uriString,
+                        esOferta = esOferta,
+                        preuOferta = preuOferta,
+                        idCreador = streamerId
+                    )
 
                     if (productIdToEdit == -1) {
                         // A) CREAR NOU (INSERT)
-                        val nouProducte = Producte(
-                            nom = nom,
-                            descripcio = desc,
-                            preu = preu,
-                            imatgeUri = uriString,
-                            esOferta = esOferta,
-                            preuOferta = preuOferta,
-                            idCreador = streamerId
-                        )
-                        dao.addProducte(nouProducte)
+                        dao.addProducte(nouProducte) // Room insereix i ignora el pid=0
                     } else {
                         // B) ACTUALITZAR EXISTENT (UPDATE)
-                        // Important: Mantenim la mateixa ID (pid)
-                        val prodEditat = Producte(
-                            pid = productIdToEdit,
-                            nom = nom,
-                            descripcio = desc,
-                            preu = preu,
-                            imatgeUri = uriString,
-                            esOferta = esOferta,
-                            preuOferta = preuOferta,
-                            idCreador = streamerId
-                        )
-                        dao.updateProducte(prodEditat)
+                        dao.updateProducte(nouProducte) // Room actualitza si el pid coincideix
                     }
 
                     withContext(Dispatchers.Main) {
-                        val missatge = if (productIdToEdit == -1) "Creat correctament!" else "Actualitzat correctament!"
+                        val missatge = if (productIdToEdit == -1) "Producte creat correctament!" else "Producte actualitzat correctament!"
                         Toast.makeText(this@ProductFormActivity, missatge, Toast.LENGTH_SHORT).show()
                         finish()
                     }
@@ -187,32 +214,29 @@ class ProductFormActivity : AppCompatActivity() {
                 Toast.makeText(this, "Nom i Preu són obligatoris", Toast.LENGTH_SHORT).show()
             }
         }
+    }
 
-        var productIdToEdit = intent.getIntExtra("PRODUCT_ID", -1)
+    // NOU: Funció per copiar la imatge a l'emmagatzematge privat de l'app (copiada del Dashboard)
+    private fun copyUriToLocalFile(originalUri: Uri): String? {
+        // Nom de l'arxiu basat en l'hora actual + ID Streamer
+        val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val fileName = "prod_${streamerId}_${timeStamp}.jpg"
+        // Arxiu de destinació dins la memòria interna de l'app
+        val destinationFile = File(filesDir, fileName)
 
-        if (productIdToEdit != -1) {
-            // Si tenim ID de Producte, estem EDITANT
-            title = "Editar Producte"
-            btnGuardar.text = "ACTUALITZAR PRODUCTE"
-
-            // NOU: Carregar dades a l'AsyncTask
-            lifecycleScope.launch(Dispatchers.IO) {
-                val producte = AppSingleton.getInstance().db.producteDao().getProducteById(productIdToEdit)
-                withContext(Dispatchers.Main) {
-                    if (producte != null) {
-                        // Omplir els EditTexts i carregar la imatge
-                        etNom.setText(producte.nom)
-                        etDesc.setText(producte.descripcio)
-                        etPreu.setText(producte.preu.toString())
-                        // ... (carregar imatge)
-                    }
+        try {
+            contentResolver.openInputStream(originalUri)?.use { inputStream ->
+                FileOutputStream(destinationFile).use { outputStream ->
+                    inputStream.copyTo(outputStream)
+                    return destinationFile.toUri().toString()
                 }
             }
-        } else {
-            // Si NO tenim ID de Producte, estem CREANT
-            title = "Nou Producte"
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
+        return null
     }
+
 
     // --- FUNCIONS AUXILIARS CÀMERA ---
 

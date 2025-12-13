@@ -116,11 +116,11 @@ class ProductDetailActivity : AppCompatActivity() {
             val itemCarro = ItemCarro(
                 idUsuari = userId,
                 idProducte = producte.pid,
-                quantitat = 1 // Per simplicitat, afegim només 1
+                quantitat = 1
             )
 
-            // Comprovar si el producte ja hi és per augmentar la quantitat o crear-ne un de nou
-            val itemExistent = AppSingleton.Companion.getInstance().db.carroDao().getItemByProducte(userId, producte.pid)
+            // Comprovem si el producte ja hi és (getItemSpecific és la funció correcta)
+            val itemExistent = AppSingleton.Companion.getInstance().db.carroDao().getItemSpecific(userId, producte.pid) // <<-- Ús correcte
 
             val missatge: String
 
@@ -129,8 +129,8 @@ class ProductDetailActivity : AppCompatActivity() {
                 AppSingleton.Companion.getInstance().db.carroDao().updateQuantitat(itemExistent.id, itemExistent.quantitat + 1)
                 missatge = "Unitat afegida al carretó!"
             } else {
-                // Si no existeix, el creem
-                AppSingleton.Companion.getInstance().db.carroDao().addItem(itemCarro)
+                // Si no existeix, el creem (insertItem és la funció correcta)
+                AppSingleton.Companion.getInstance().db.carroDao().insertItem(itemCarro) // <<-- Ús correcte
                 missatge = "Producte afegit al carretó!"
             }
 

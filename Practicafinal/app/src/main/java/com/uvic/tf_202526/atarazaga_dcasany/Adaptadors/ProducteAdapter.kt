@@ -1,5 +1,7 @@
 package com.uvic.tf_202526.atarazaga_dcasany.Adaptadors
 
+import android.R.attr.onClick
+import android.icu.text.DecimalFormat
 import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
@@ -22,12 +24,12 @@ class ProducteAdapter(
         fun onAfegirCarroClick(producte: Producte)
     }
 
-    class ProducteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val ivImatge: ImageView = itemView.findViewById(R.id.iv_producte)
-        val tvNom: TextView = itemView.findViewById(R.id.tv_nom_prod)
-        val tvPreu: TextView = itemView.findViewById(R.id.tv_preu_prod)
-        val tvPreuOferta: TextView = itemView.findViewById(R.id.tv_preu_oferta_item) // NOU
-        val btnAfegir: Button = itemView.findViewById(R.id.btn_afegir_carro)
+    class ProducteViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        // Corregim les IDs (estan basades en el nou item_producte.xml)
+        val ivImage: ImageView = view.findViewById(R.id.iv_producte_imatge)
+        val tvNom: TextView = view.findViewById(R.id.tv_producte_nom)
+        val tvPreu: TextView = view.findViewById(R.id.tv_producte_preu)
+        val tvOferta: TextView = view.findViewById(R.id.tv_producte_es_oferta) // NOU
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProducteViewHolder {
@@ -36,35 +38,32 @@ class ProducteAdapter(
     }
 
     override fun onBindViewHolder(holder: ProducteViewHolder, position: Int) {
-        val prod = llista[position]
+        val producte = llista[position]
+        val df = DecimalFormat("#,##0.00€")
 
-        holder.tvNom.text = prod.nom
-        holder.tvPreu.text = "${prod.preu} €"
+        holder.tvNom.text = producte.nom
 
-        // --- LÒGICA D'OFERTA ---
-        if (prod.esOferta && prod.preuOferta > 0) {
-            // Està d'oferta: Ratllem el preu vell i mostrem el nou
-            holder.tvPreu.paintFlags = holder.tvPreu.paintFlags or android.graphics.Paint.STRIKE_THRU_TEXT_FLAG
-            holder.tvPreu.setTextColor(android.graphics.Color.GRAY) // Gris per al vell
-
-            holder.tvPreuOferta.text = "${prod.preuOferta} €"
-            holder.tvPreuOferta.visibility = View.VISIBLE
+        // Lògica d'Oferta
+        if (producte.esOferta && producte.preuOferta > 0.0) {
+            holder.tvPreu.text = df.format(producte.preuOferta)
+            holder.tvOferta.visibility = View.VISIBLE
         } else {
-            // Normal: Restaurem l'estat original (importantíssim pel reciclatge de vistes)
-            holder.tvPreu.paintFlags = 0
-            holder.tvPreu.setTextColor(android.graphics.Color.parseColor("#388E3C")) // Verd original
-            holder.tvPreuOferta.visibility = View.GONE
-        }
-        // -----------------------
-
-        if (!prod.imatgeUri.isNullOrEmpty()) {
-            holder.ivImatge.setImageURI(Uri.parse(prod.imatgeUri))
-        } else {
-            holder.ivImatge.setImageResource(android.R.drawable.ic_menu_gallery)
+            holder.tvPreu.text = df.format(producte.preu)
+            holder.tvOferta.visibility = View.GONE
         }
 
-        holder.itemView.setOnClickListener { listener.onProducteClick(prod) }
-        holder.btnAfegir.setOnClickListener { listener.onAfegirCarroClick(prod) }
+        // Lògica de càrrega d'imatge (hauria de ser consistent amb altres llocs)
+        if (!producte.imatgeUri.isNullOrEmpty()) {
+            try {
+                holder.ivImage.setImageURI(Uri.parse(producte.imatgeUri))
+            } catch (e: Exception) {
+                holder.ivImage.setImageResource(android.R.color.darker_gray)
+            }
+        } else {
+            holder.ivImage.setImageResource(android.R.color.darker_gray)
+        }
+
+        holder.itemView.setOnClickListener {onClick(producte) }
     }
 
     override fun getItemCount(): Int = llista.size

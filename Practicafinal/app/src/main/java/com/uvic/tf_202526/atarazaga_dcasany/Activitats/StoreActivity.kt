@@ -42,8 +42,11 @@ class StoreActivity : AppCompatActivity() {
         }
 
         // 2. CONFIGURAR VISTA
-        rvProductes = findViewById(R.id.rv_productes_botiga)
+        ivBanner = findViewById(R.id.iv_store_banner) // FIX: Nou ID
+        rvProductes = findViewById(R.id.rv_store_products) // FIX: Nou ID
         rvProductes.layoutManager = GridLayoutManager(this, 2)
+
+        val fabCart = findViewById<FloatingActionButton>(R.id.fab_go_to_cart)
 
         val btnCart = findViewById<FloatingActionButton>(R.id.fab_view_cart)
         btnCart.setOnClickListener {
@@ -120,17 +123,18 @@ class StoreActivity : AppCompatActivity() {
             val dao = AppSingleton.getInstance().db.carroDao()
 
             // Comprovem si ja el té per sumar +1 o crear-lo nou
-            val itemExistent = dao.getItemSpecific(userId, producte.pid)
+            val itemExistent = dao.getItemSpecific(userId, producte.pid) // Aquesta funció és correcta
 
             if (itemExistent != null) {
-                itemExistent.quantitat += 1
-                dao.updateItem(itemExistent)
+                // CORRECCIÓ: Fem l'update amb la funció correcta
+                dao.updateQuantitat(itemExistent.id, itemExistent.quantitat + 1)
             } else {
                 val nouItem = ItemCarro(
                     idUsuari = userId,
                     idProducte = producte.pid,
                     quantitat = 1
                 )
+                // CORRECCIÓ: Utilitzem insertItem
                 dao.insertItem(nouItem)
             }
 
