@@ -10,23 +10,29 @@ data class Producte(
     val pid: Int = 0,
 
     @ColumnInfo(name = "nom")
-    val nom: String,
+    var nom: String, // 'var' per si voleu editar-lo després
 
     @ColumnInfo(name = "descripcio")
-    val descripcio: String,
+    var descripcio: String,
 
     @ColumnInfo(name = "preu")
-    val preu: Double,
+    var preu: Double,
 
-    // Guardarem la ruta de la imatge (URI) com a text.
-    // Posa '?' perquè pot ser null si encara no n'ha triat cap.
     @ColumnInfo(name = "imatge_uri")
-    val imatgeUri: String?,
+    var imatgeUri: String?,
 
+    // --- NOUS CAMPS PER A OFERTES (Dev B) ---
     @ColumnInfo(name = "es_oferta")
-    val esOferta: Boolean = false,
+    var esOferta: Boolean = false,
 
-    // IMPORTANT: Això vincula el producte amb el Streamer que l'ha creat
+    @ColumnInfo(name = "preu_oferta")
+    var preuOferta: Double = 0.0,
+
+    // --- CAMP PER VINCULAR AMB STREAMER ---
     @ColumnInfo(name = "id_creador")
     val idCreador: Int
-)
+) {
+    // Propietat calculada per saber què cobrar (per al Carro)
+    val preuFinal: Double
+        get() = if (esOferta && preuOferta > 0.0) preuOferta else preu
+}
