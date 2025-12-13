@@ -26,38 +26,85 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.FileOutputStream // Import necessari per la funció copyUriToLocalFile
+import java.io.FileOutputStream
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import android.graphics.BitmapFactory // <-- IMPORT NECESSARI
+import android.graphics.BitmapFactory
+import android.util.Log
 
 class ProductFormActivity : AppCompatActivity() {
 
     private lateinit var ivPreview: ImageView
-    private var currentPhotoUri: Uri? = null // Aquí guardarem la ruta de la foto final
+    private var currentPhotoUri: Uri? = null // Contindrà la URI del fitxer local amb esquema 'file://'
     private var tempPhotoUri: Uri? = null    // Ruta temporal per a la càmera
     private var streamerId: Int = -1
-    private var productIdToEdit: Int = -1    // ID del producte si estem editant (-1 si és nou)
+    private var productIdToEdit: Int = -1
 
-    // LAUNCHER CÀMERA
+    // LAUNCHER CÀMERA (CORREGIT)
     private val cameraLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success) {
-            currentPhotoUri = tempPhotoUri
-            ivPreview.setImageURI(currentPhotoUri)
+            //currentPhotoUri = tempPhotoUri // <-- ELIMINAT. El copiem a continuació
+
+            // ** FIX CÀMERA 1: Copiem la URI de la càmera a l'emmagatzematge intern **
+            tempPhotoUri?.let { uri ->
+                lifecycleScope.launch(Dispatchers.IO) {
+                    // El camí local és la RUTA ABSOLUTA.
+                    val localPathString = copyUriToLocalFile(uri)
+
+                    withContext(Dispatchers.Main) {
+                        if (localPathString != null) {
+                            // currentPhotoUri es crea a partir del camí local (més robust)
+                            currentPhotoUri = Uri.fromFile(File(localPathString))
+
+                            // ** FIX CÀMERA 2: Carreguem amb BitmapFactory (igual que la galeria) **
+                            try {
+                                val bitmap = BitmapFactory.decodeFile(localPathString)
+                                if (bitmap != null) {
+                                    ivPreview.setImageBitmap(bitmap)
+                                } else {
+                                    ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
+                                }
+                            } catch (e: Exception) {
+                                Log.e("ProductForm", "Error al carregar la imatge de la càmera: ${e.message}")
+                                ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
+                            }
+                            Toast.makeText(this@ProductFormActivity, "Imatge de càmera copiada localment.", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(this@ProductFormActivity, "Error al copiar la imatge de la càmera.", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
+            }
         }
     }
 
-    // LAUNCHER GALERIA
+    // LAUNCHER GALERIA (CORREGIT)
     private val galleryLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
             lifecycleScope.launch(Dispatchers.IO) {
-                val localUriString = copyUriToLocalFile(uri)
+                // El localPathString és ara la RUTA ABSOLUTA del fitxer copiat
+                val localPathString = copyUriToLocalFile(uri)
+
                 withContext(Dispatchers.Main) {
-                    if (localUriString != null) {
-                        currentPhotoUri = Uri.parse(localUriString)
-                        ivPreview.setImageURI(currentPhotoUri)
+                    if (localPathString != null) {
+                        // Creem la URI a partir de la ruta per guardar-la a la BD
+                        currentPhotoUri = Uri.fromFile(File(localPathString))
+
+                        // ** FIX GALERIA: Descodificació de la imatge des de la RUTA ABSOLUTA **
+                        try {
+                            val bitmap = BitmapFactory.decodeFile(localPathString)
+                            if (bitmap != null) {
+                                ivPreview.setImageBitmap(bitmap)
+                            } else {
+                                ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
+                            }
+                        } catch (e: Exception) {
+                            Log.e("ProductForm", "Error al carregar la imatge al galleryLauncher: ${e.message}")
+                            ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
+                        }
+
                         Toast.makeText(this@ProductFormActivity, "Imatge copiada localment.", Toast.LENGTH_SHORT).show()
                     } else {
                         Toast.makeText(this@ProductFormActivity, "Error al copiar la imatge. Utilitza una imatge local.", Toast.LENGTH_LONG).show()
@@ -97,7 +144,6 @@ class ProductFormActivity : AppCompatActivity() {
         // Lògica CheckBox: Si es marca, s'activa el camp de preu oferta
         cbOferta.setOnCheckedChangeListener { _, isChecked ->
             etPreuOferta.isEnabled = isChecked
-            // El valor es preserva automàticament
         }
 
         // 3. SI ESTEM EN MODE EDICIÓ, CARREGUEM DADES
@@ -110,16 +156,13 @@ class ProductFormActivity : AppCompatActivity() {
 
                 withContext(Dispatchers.Main) {
                     if (prod != null) {
-                        // [INICI: Càrrega de dades per a tots els camps (NECESSARI per al Problema 2)]
+                        // [INICI: Càrrega de dades per a tots els camps]
                         etNom.setText(prod.nom)
                         etDesc.setText(prod.descripcio)
                         etPreu.setText(prod.preu.toString())
 
-                        // Lògica per carregar l'estat d'oferta (Fix 2 - Part 1)
                         cbOferta.isChecked = prod.esOferta
                         etPreuOferta.isEnabled = prod.esOferta
-                        // Fix 2: Carreguem l'últim preu rebaixat si no és 0,
-                        // ja que el volem recordar (encara que esOferta sigui false).
                         if (prod.preuOferta > 0.0) {
                             etPreuOferta.setText(prod.preuOferta.toString())
                         } else {
@@ -128,29 +171,39 @@ class ProductFormActivity : AppCompatActivity() {
                         // [FINAL: Càrrega de dades]
 
 
-                        // Carregar Imatge existent (FIX PROBLEMA 1: Simplificació)
+                        // Carregar Imatge existent (FIX DEFINITIU)
                         if (!prod.imatgeUri.isNullOrEmpty()) {
                             try {
-                                currentPhotoUri = Uri.parse(prod.imatgeUri)
+                                val savedUri = Uri.parse(prod.imatgeUri)
 
-                                // [ELIMINAR AQUESTES LÍNIES SI EXISTEIXEN]
-                                // ivPreview.setImageDrawable(null)
-                                // ivPreview.setImageBitmap(null)
+                                // ** CORRECCIÓ: Extraiem el PATH ABSOLUT de la URI. **
+                                // El .path de file://ruta/fitxer.jpg és /ruta/fitxer.jpg.
+                                val filePath = savedUri.path
 
-                                ivPreview.setImageDrawable(null)
-                                // Aquesta és l'única línia de càrrega que necessites
-                                ivPreview.setImageURI(currentPhotoUri)
+                                if (filePath != null && File(filePath).exists()) {
+                                    val bitmap = BitmapFactory.decodeFile(filePath)
+                                    if (bitmap != null) {
+                                        ivPreview.setImageBitmap(bitmap)
+                                        currentPhotoUri = savedUri // Mantenim la URI completa per guardar
+                                    } else {
+                                        // Fallback si la descodificació falla
+                                        ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
+                                    }
+                                } else {
+                                    // Fallback si el fitxer no existeix
+                                    ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
+                                }
 
                             } catch (e: Exception) {
-                                // Si la URI no es pot llegir, mostrem l'icona de càmera (el placeholder)
+                                Log.e("ProductForm", "Error al carregar la imatge en edició: ${e.message}")
                                 ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
                             }
                         } else {
-                            // Si no hi ha URI, assegurem-nos de posar l'icona de càmera (el placeholder)
+                            // Si no hi ha URI
                             ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
                         }
                     } else {
-                        // Si l'ID d'edició falla, tractem com a nou producte (seguretat)
+                        // Si l'ID d'edició falla...
                         productIdToEdit = -1
                         tvTitleForm.text = "Nou Producte"
                         btnGuardar.text = "GUARDAR PRODUCTE"
@@ -179,7 +232,6 @@ class ProductFormActivity : AppCompatActivity() {
 
             // Recollim dades d'oferta
             val esOferta = cbOferta.isChecked
-            // Si l'oferta està activada, utilitzem el preu del camp. Si no, és 0.0.
             val preuOferta = etPreuOferta.text.toString().toDoubleOrNull() ?: 0.0
 
             if (nom.isNotEmpty() && preuStr.isNotEmpty()) {
@@ -189,12 +241,12 @@ class ProductFormActivity : AppCompatActivity() {
                     return@setOnClickListener
                 }
 
-                // Validació d'oferta: el preu rebaixat no pot ser superior al preu base
                 if (esOferta && preuOferta >= preu) {
                     Toast.makeText(this, "El preu d'oferta no pot ser superior al preu base.", Toast.LENGTH_LONG).show()
                     return@setOnClickListener
                 }
 
+                // IMPORTANT: currentPhotoUri ara conté la URI amb l'esquema 'file://'
                 val uriString = currentPhotoUri?.toString()
 
                 lifecycleScope.launch(Dispatchers.IO) {
@@ -228,7 +280,8 @@ class ProductFormActivity : AppCompatActivity() {
         }
     }
 
-    // Funció per copiar la imatge a l'emmagatzematge privat de l'app
+    // Funció per copiar la imatge a l'emmagatzematge privat de l'app (CORREGIT)
+    // Retorna la RUTA ABSOLUTA (String) del fitxer copiat
     private fun copyUriToLocalFile(originalUri: Uri): String? {
         val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val fileName = "prod_${streamerId}_${timeStamp}.jpg"
@@ -238,7 +291,8 @@ class ProductFormActivity : AppCompatActivity() {
             contentResolver.openInputStream(originalUri)?.use { inputStream ->
                 FileOutputStream(destinationFile).use { outputStream ->
                     inputStream.copyTo(outputStream)
-                    return destinationFile.toUri().toString()
+                    // ** CANVI CLAU **: Retornem la ruta absoluta, no la URI string.
+                    return destinationFile.absolutePath
                 }
             }
         } catch (e: Exception) {
