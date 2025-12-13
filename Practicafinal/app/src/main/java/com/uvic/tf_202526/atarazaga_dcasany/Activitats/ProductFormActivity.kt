@@ -188,6 +188,31 @@ class ProductFormActivity : AppCompatActivity() {
                 Toast.makeText(this, "Nom i Preu són obligatoris", Toast.LENGTH_SHORT).show()
             }
         }
+
+        var productIdToEdit = intent.getIntExtra("PRODUCT_ID", -1)
+
+        if (productIdToEdit != -1) {
+            // Si tenim ID de Producte, estem EDITANT
+            title = "Editar Producte"
+            btnGuardar.text = "ACTUALITZAR PRODUCTE"
+
+            // NOU: Carregar dades a l'AsyncTask
+            lifecycleScope.launch(Dispatchers.IO) {
+                val producte = AppSingleton.getInstance().db.producteDao().getProducteById(productIdToEdit)
+                withContext(Dispatchers.Main) {
+                    if (producte != null) {
+                        // Omplir els EditTexts i carregar la imatge
+                        etNom.setText(producte.nom)
+                        etDesc.setText(producte.descripcio)
+                        etPreu.setText(producte.preu.toString())
+                        // ... (carregar imatge)
+                    }
+                }
+            }
+        } else {
+            // Si NO tenim ID de Producte, estem CREANT
+            title = "Nou Producte"
+        }
     }
 
     // --- FUNCIONS AUXILIARS CÀMERA ---

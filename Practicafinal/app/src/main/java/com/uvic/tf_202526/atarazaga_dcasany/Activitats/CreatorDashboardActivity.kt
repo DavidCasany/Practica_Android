@@ -65,6 +65,10 @@ class CreatorDashboardActivity : AppCompatActivity() {
 
                     override fun onEditClick(producte: Producte) {
                         // Opcional: Aquí podries obrir el ProductFormActivity passant-li el producte per editar
+                        val intent = Intent(this@CreatorDashboardActivity, ProductFormActivity::class.java)
+                        intent.putExtra("STREAMER_ID", streamerId) // Li diem qui és l'amo
+                        intent.putExtra("PRODUCT_ID", producte.pid) // NOU: Li diem QUIN producte és
+                        startActivity(intent)
                         Toast.makeText(this@CreatorDashboardActivity, "Editar: ${producte.nom}", Toast.LENGTH_SHORT).show()
                     }
 

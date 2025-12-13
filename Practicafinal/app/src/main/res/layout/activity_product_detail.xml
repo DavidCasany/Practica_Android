@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <ImageView
+            android:id="@+id/iv_detall_imatge"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:src="@android:drawable/ic_menu_gallery"
+            android:scaleType="centerCrop"
+            android:background="#EEEEEE"/>
+
+        <TextView
+            android:id="@+id/tv_detall_nom"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Nom Producte"
+            android:textSize="26sp"
+            android:textStyle="bold"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp">
+
+            <TextView
+                android:id="@+id/tv_detall_preu_original"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="20.00 €"
+                android:textSize="20sp"
+                android:textColor="#757575"/>
+
+            <TextView
+                android:id="@+id/tv_detall_preu_oferta"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:text="15.00 €"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="#D32F2F"
+                android:visibility="gone"/> </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_detall_desc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Descripció del producte..."
+            android:textSize="16sp"
+            android:lineSpacingExtra="4dp"/>
+
+        <Button
+            android:id="@+id/btn_detall_afegir"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginTop="32dp"
+            android:text="AFEGIR AL CARRETÓ"
+            android:backgroundTint="#FF9800"/>
+
+    </LinearLayout>
+</ScrollView>
