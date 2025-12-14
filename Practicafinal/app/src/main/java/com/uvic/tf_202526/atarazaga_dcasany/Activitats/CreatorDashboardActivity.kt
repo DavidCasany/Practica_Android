@@ -4,10 +4,10 @@ import android.content.Intent
 import androidx.core.net.toUri
 import android.net.Uri
 import android.os.Bundle
-import android.view.View // << IMPORTANT
-import android.widget.FrameLayout // << IMPORTANT
+import android.view.View
+import android.widget.FrameLayout
 import android.widget.ImageView
-import android.widget.LinearLayout // << IMPORTANT
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -29,9 +29,11 @@ class CreatorDashboardActivity : AppCompatActivity() {
 
     private var streamerId: Int = -1
     private lateinit var rvProductes: RecyclerView
+
+    // UI del Bàner (Necessites FrameLayout i LinearLayout)
     private lateinit var ivBanner: ImageView
-    private lateinit var placeholderLayout: LinearLayout // << NOU ELEMENT
-    private lateinit var bannerContainer: FrameLayout  // << NOU ELEMENT
+    private lateinit var placeholderLayout: LinearLayout
+    private lateinit var bannerContainer: FrameLayout
 
     // Launcher de Galeria AMB COPIA LOCAL
     private val bannerLauncher = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.GetContent()) { uri ->
@@ -42,21 +44,17 @@ class CreatorDashboardActivity : AppCompatActivity() {
 
                 withContext(Dispatchers.Main) {
                     if (localUriString != null) {
-                        // 2. Visualitzem la URI LOCAL (file://)
-                        ivBanner.setImageURI(Uri.parse(localUriString))
-
-                        // AMAGUEM EL PLACEHOLDER PERQUÈ JA TENIM IMATGE
-                        placeholderLayout.visibility = View.GONE
-                        ivBanner.scaleType = ImageView.ScaleType.CENTER_CROP
+                        // 2. Visualitzem la URI LOCAL i actualitzem la UI
+                        actualitzarUIBanner(localUriString)
 
                         // 3. Guardem la URI LOCAL a la Base de Dades
                         guardarBannerBD(localUriString)
-                        Toast.makeText(this@CreatorDashboardActivity, "✅ Banner guardat permanentment a l'app!", Toast.LENGTH_SHORT).show()
+                        // TEXT TRADUÏT
+                        Toast.makeText(this@CreatorDashboardActivity, getString(R.string.banner_saved_success), Toast.LENGTH_SHORT).show()
                     } else {
-                        Toast.makeText(this@CreatorDashboardActivity, "❌ Error al processar la imatge. Torna a intentar amb una imatge local.", Toast.LENGTH_LONG).show()
-                        // Si falla, mostrem el placeholder de nou
-                        ivBanner.setImageDrawable(null)
-                        placeholderLayout.visibility = View.VISIBLE
+                        // TEXT TRADUÏT
+                        Toast.makeText(this@CreatorDashboardActivity, getString(R.string.banner_process_error), Toast.LENGTH_LONG).show()
+                        actualitzarUIBanner(null) // Tornar a mostrar el placeholder
                     }
                 }
             }
@@ -75,25 +73,27 @@ class CreatorDashboardActivity : AppCompatActivity() {
         }
 
         if (streamerId == -1) {
-            Toast.makeText(this, "Error: No s'ha pogut carregar l'usuari Streamer. Sessió invàlida.", Toast.LENGTH_LONG).show()
+            // TEXT TRADUÏT
+            Toast.makeText(this, getString(R.string.error_session_invalid), Toast.LENGTH_LONG).show()
             finish()
             return
         }
 
-        Toast.makeText(this, "Dashboard carregat. ID: $streamerId", Toast.LENGTH_SHORT).show()
+        // TEXT TRADUÏT amb variable
+        Toast.makeText(this, getString(R.string.dashboard_loaded_msg, streamerId), Toast.LENGTH_SHORT).show()
 
         // --- 2. INICIALITZACIÓ DE VISTES ---
         rvProductes = findViewById(R.id.rv_els_meus_productes)
         rvProductes.layoutManager = GridLayoutManager(this, 2)
 
+        // Vinculem els elements del bàner
         ivBanner = findViewById(R.id.iv_dashboard_banner)
-        placeholderLayout = findViewById(R.id.layout_banner_placeholder) // << VINCULACIÓ
-        bannerContainer = findViewById(R.id.banner_container) // << VINCULACIÓ
+        placeholderLayout = findViewById(R.id.layout_banner_placeholder)
+        bannerContainer = findViewById(R.id.banner_container)
 
         val btnAdd = findViewById<FloatingActionButton>(R.id.fab_add_product)
 
         // --- 3. LISTENERS ---
-        // Ara el click el fem al contenidor sencer, així és més fàcil de clicar si està buit
         bannerContainer.setOnClickListener {
             bannerLauncher.launch("image/*")
         }
@@ -109,7 +109,27 @@ class CreatorDashboardActivity : AppCompatActivity() {
         carregarElsMeusProductes()
     }
 
-    // NOU: Funció per copiar la imatge a l'emmagatzematge privat de l'app
+    // Funció refactoritzada per gestionar la visibilitat del Placeholder
+    private fun actualitzarUIBanner(uriString: String?) {
+        if (!uriString.isNullOrEmpty()) {
+            try {
+                ivBanner.setImageURI(Uri.parse(uriString))
+                ivBanner.scaleType = ImageView.ScaleType.CENTER_CROP
+                // Si tenim foto, AMAGUEM el placeholder
+                placeholderLayout.visibility = View.GONE
+            } catch (e: Exception) {
+                // Si la URI és invàlida o l'arxiu no es carrega
+                ivBanner.setImageDrawable(null)
+                placeholderLayout.visibility = View.VISIBLE
+            }
+        } else {
+            // Si NO hi ha URI guardada, MOSTREM el placeholder
+            ivBanner.setImageDrawable(null)
+            placeholderLayout.visibility = View.VISIBLE
+        }
+    }
+
+
     private fun copyUriToLocalFile(originalUri: Uri): String? {
         val fileName = "banner_${streamerId}.jpg"
         val destinationFile = File(filesDir, fileName)
@@ -133,27 +153,11 @@ class CreatorDashboardActivity : AppCompatActivity() {
             val usuari = AppSingleton.getInstance().db.usuariDao().getUsuariById(streamerId)
             withContext(Dispatchers.Main) {
                 if (usuari != null) {
-                    title = "Botiga de ${usuari.nom}"
+                    // TEXT TRADUÏT amb variable
+                    title = getString(R.string.shop_title_format, usuari.nom)
 
-                    val bannerUriString = usuari.bannerUri
-
-                    // LÒGICA VISUAL DEL BÀNER
-                    if (!bannerUriString.isNullOrEmpty()) {
-                        try {
-                            ivBanner.setImageURI(Uri.parse(bannerUriString))
-                            ivBanner.scaleType = ImageView.ScaleType.CENTER_CROP
-                            // Si tenim imatge, amaguem el missatge d'ajuda
-                            placeholderLayout.visibility = View.GONE
-                        } catch (e: Exception) {
-                            // Si falla la càrrega, mostrem el missatge
-                            ivBanner.setImageDrawable(null)
-                            placeholderLayout.visibility = View.VISIBLE
-                        }
-                    } else {
-                        // Si no hi ha imatge, mostrem el missatge elegant
-                        ivBanner.setImageDrawable(null)
-                        placeholderLayout.visibility = View.VISIBLE
-                    }
+                    // Carreguem la imatge i actualitzem la visibilitat
+                    actualitzarUIBanner(usuari.bannerUri)
                 }
             }
         }
@@ -168,6 +172,8 @@ class CreatorDashboardActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         if (streamerId != -1) {
+            // Recarreguem el bàner i els productes per si hi ha hagut canvis
+            carregarDadesUsuari()
             carregarElsMeusProductes()
         }
     }
@@ -183,6 +189,8 @@ class CreatorDashboardActivity : AppCompatActivity() {
                         intent.putExtra("STREAMER_ID", streamerId)
                         intent.putExtra("PRODUCT_ID", producte.pid)
                         startActivity(intent)
+                        // TEXT TRADUÏT amb variable
+                        Toast.makeText(this@CreatorDashboardActivity, getString(R.string.edit_product_toast, producte.nom), Toast.LENGTH_SHORT).show()
                     }
 
                     override fun onDeleteClick(producte: Producte) {
@@ -196,12 +204,13 @@ class CreatorDashboardActivity : AppCompatActivity() {
 
     private fun confirmarEsborrar(producte: Producte) {
         AlertDialog.Builder(this)
-            .setTitle("Esborrar Producte")
-            .setMessage("Estàs segur que vols eliminar '${producte.nom}'?")
-            .setPositiveButton("Sí") { _, _ ->
+            // TEXTOS TRADUÏTS
+            .setTitle(getString(R.string.delete_dialog_title))
+            .setMessage(getString(R.string.confirm_delete_msg, producte.nom))
+            .setPositiveButton(getString(R.string.dialog_yes)) { _, _ ->
                 esborrarProducte(producte)
             }
-            .setNegativeButton("No", null)
+            .setNegativeButton(getString(R.string.dialog_no), null)
             .show()
     }
 
@@ -210,7 +219,8 @@ class CreatorDashboardActivity : AppCompatActivity() {
             AppSingleton.getInstance().db.producteDao().deleteProducte(producte)
 
             withContext(Dispatchers.Main) {
-                Toast.makeText(this@CreatorDashboardActivity, "Eliminat!", Toast.LENGTH_SHORT).show()
+                // TEXT TRADUÏT
+                Toast.makeText(this@CreatorDashboardActivity, getString(R.string.deleted_toast), Toast.LENGTH_SHORT).show()
                 carregarElsMeusProductes()
             }
         }

@@ -4,11 +4,10 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.widget.ImageView
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.GridLayoutManager // Importa l'estil de graella
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.uvic.tf_202526.atarazaga_dcasany.Adaptadors.ProducteAdapter
@@ -22,7 +21,6 @@ import kotlinx.coroutines.withContext
 
 class StoreActivity : AppCompatActivity() {
 
-    // FIX 1: Declaració correcta dels membres de classe
     private lateinit var rvProductes: RecyclerView
     private lateinit var ivBanner: ImageView
 
@@ -39,46 +37,36 @@ class StoreActivity : AppCompatActivity() {
         userId = prefs.getInt("USER_ID", -1)
 
         if (streamerId == -1 || userId == -1) {
-            Toast.makeText(this, "Error: Dades de sessió invàlides", Toast.LENGTH_SHORT).show()
+            // TEXT TRADUÏT
+            Toast.makeText(this, getString(R.string.error_invalid_session_data), Toast.LENGTH_SHORT).show()
             finish()
             return
         }
 
         // 2. CONFIGURAR VISTA
-        // FIX 2: Inicialització correcta amb els nous IDs del layout
         ivBanner = findViewById(R.id.iv_store_banner)
         rvProductes = findViewById(R.id.rv_store_products)
-
-        // Utilitzem GridLayoutManager per a l'estil de targeta professional
         rvProductes.layoutManager = GridLayoutManager(this, 2)
 
-        // FIX 3: Utilitzem l'únic FAB que existeix al nou layout (fab_go_to_cart)
         val fabCart = findViewById<FloatingActionButton>(R.id.fab_go_to_cart)
         fabCart.setOnClickListener {
             startActivity(Intent(this, CartActivity::class.java))
         }
 
-        // 3. CARREGAR DADES DEL STREAMER (BANNER I NOM)
+        // 3. CARREGAR DADES
         carregarInfoStreamer()
-
-        // 4. CARREGAR PRODUCTES
         carregarProductes()
     }
 
-    // --- FUNCIÓ: PINTAR LA CAPÇALERA ---
     private fun carregarInfoStreamer() {
-        // ivBanner ja és membre de classe i s'ha inicialitzat a onCreate
-
         lifecycleScope.launch(Dispatchers.IO) {
-            // Busquem l'usuari streamer per ID
             val streamer = AppSingleton.getInstance().db.usuariDao().getUsuariById(streamerId)
 
             withContext(Dispatchers.Main) {
                 if (streamer != null) {
-                    // FIX 4: Posem el nom a la barra d'acció (més net i professional)
-                    title = "Botiga de ${streamer.nom}"
+                    // TEXT TRADUÏT amb format
+                    title = getString(R.string.shop_title_format, streamer.nom)
 
-                    // Posem el banner si en té
                     val bannerUri = streamer.bannerUri
                     if (!bannerUri.isNullOrEmpty()) {
                         try {
@@ -99,10 +87,7 @@ class StoreActivity : AppCompatActivity() {
             val llista = AppSingleton.getInstance().db.producteDao().getProductesByStreamer(streamerId)
 
             withContext(Dispatchers.Main) {
-                // Configurem l'adaptador amb els dos listeners
                 val adapter = ProducteAdapter(llista, object : ProducteAdapter.OnProducteClickListener {
-
-                    // A) Clic a la targeta -> Anar al Detall
                     override fun onProducteClick(producte: Producte) {
                         val intent = Intent(this@StoreActivity, ProductDetailActivity::class.java)
                         intent.putExtra("PRODUCT_ID", producte.pid)
@@ -110,7 +95,6 @@ class StoreActivity : AppCompatActivity() {
                         startActivity(intent)
                     }
 
-                    // B) Clic al botó "Afegir" (Aquesta funció ha de ser cridada des de dins de l'Adapter)
                     override fun onAfegirCarroClick(producte: Producte) {
                         afegirAlCarro(producte)
                     }
@@ -123,12 +107,9 @@ class StoreActivity : AppCompatActivity() {
     private fun afegirAlCarro(producte: Producte) {
         lifecycleScope.launch(Dispatchers.IO) {
             val dao = AppSingleton.getInstance().db.carroDao()
-
-            // Comprovem si ja el té per sumar +1 o crear-lo nou
             val itemExistent = dao.getItemSpecific(userId, producte.pid)
 
             if (itemExistent != null) {
-                // Actualitzem la quantitat
                 dao.updateQuantitat(itemExistent.id, itemExistent.quantitat + 1)
             } else {
                 val nouItem = ItemCarro(
@@ -136,12 +117,12 @@ class StoreActivity : AppCompatActivity() {
                     idProducte = producte.pid,
                     quantitat = 1
                 )
-                // Inserim el nou ítem
                 dao.insertItem(nouItem)
             }
 
             withContext(Dispatchers.Main) {
-                Toast.makeText(this@StoreActivity, "${producte.nom} afegit al carro!", Toast.LENGTH_SHORT).show()
+                // TEXT TRADUÏT amb variable
+                Toast.makeText(this@StoreActivity, getString(R.string.msg_added_to_cart_format, producte.nom), Toast.LENGTH_SHORT).show()
             }
         }
     }

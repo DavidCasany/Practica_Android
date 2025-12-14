@@ -24,7 +24,7 @@
 
             <TextView
                 android:id="@+id/tv_title_form"
-                android:text="Nou Producte"
+                android:text="@string/title_new_product"
                 android:textSize="32sp"
                 android:textStyle="bold"
                 android:fontFamily="sans-serif-light"
@@ -45,7 +45,7 @@
                     android:id="@+id/et_nom_prod"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Nom del producte"
+                    android:hint="@string/hint_product_name"
                     android:textColor="@android:color/white"/>
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -62,7 +62,7 @@
                     android:id="@+id/et_desc_prod"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Descripció"
+                    android:hint="@string/hint_description"
                     android:lines="4"
                     android:gravity="top"
                     android:textColor="@android:color/white"/>
@@ -75,7 +75,7 @@
                 android:textColorHint="#CCCCCC"
                 app:boxStrokeColor="#FF5722"
                 app:hintTextColor="#FF5722"
-                app:suffixText="€"
+                app:suffixText="@string/euro_suffix"
                 app:suffixTextColor="#FFFFFF"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
@@ -83,7 +83,7 @@
                     android:id="@+id/et_preu_prod"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Preu Base"
+                    android:hint="@string/hint_price_base"
                     android:inputType="numberDecimal"
                     android:textColor="@android:color/white"/>
             </com.google.android.material.textfield.TextInputLayout>
@@ -106,7 +106,7 @@
                         android:id="@+id/cb_es_oferta"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Activar Oferta"
+                        android:text="@string/checkbox_offer"
                         android:textColor="#FFFFFF"
                         android:buttonTint="#FF5722"/>
 
@@ -117,7 +117,7 @@
                         android:textColorHint="#AAAAAA"
                         app:boxStrokeColor="#FF5722"
                         app:hintTextColor="#FF5722"
-                        app:suffixText="€"
+                        app:suffixText="@string/euro_suffix"
                         app:suffixTextColor="#FFFFFF"
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
@@ -125,7 +125,7 @@
                             android:id="@+id/et_preu_oferta"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:hint="Preu Rebaixat"
+                            android:hint="@string/hint_price_offer"
                             android:inputType="numberDecimal"
                             android:enabled="false"
                             android:textColor="#FFFFFF"/>
@@ -134,7 +134,7 @@
             </androidx.cardview.widget.CardView>
 
             <TextView
-                android:text="Imatge del producte (Opcional)"
+                android:text="@string/label_image_optional"
                 android:layout_marginTop="32dp"
                 android:textColor="#CCCCCC"
                 android:layout_width="wrap_content"
@@ -158,7 +158,7 @@
 
                 <Button
                     android:id="@+id/btn_camera"
-                    android:text="CÀMERA"
+                    android:text="@string/btn_camera"
                     android:layout_marginEnd="8dp"
                     android:backgroundTint="#6200EE"
                     android:layout_width="wrap_content"
@@ -166,7 +166,7 @@
 
                 <Button
                     android:id="@+id/btn_galeria"
-                    android:text="GALERIA"
+                    android:text="@string/btn_gallery"
                     android:layout_marginStart="8dp"
                     android:backgroundTint="#FF5722"
                     android:layout_width="wrap_content"
@@ -175,7 +175,7 @@
 
             <Button
                 android:id="@+id/btn_guardar_prod"
-                android:text="GUARDAR PRODUCTE"
+                android:text="@string/btn_save_product"
                 android:backgroundTint="#4CAF50"
                 android:layout_marginTop="48dp"
                 android:layout_width="match_parent"

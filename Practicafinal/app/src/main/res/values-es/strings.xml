@@ -1,0 +1,120 @@
+<resources>
+    <string name="app_name">MerchApp</string>
+
+    <string name="dashboard_loaded_msg">Panel cargado. ID: %1$d</string>
+    <string name="error_session_invalid">Error: No se pudo cargar el usuario Streamer. Sesión inválida.</string>
+    <string name="banner_saved_success">✅ ¡Banner guardado permanentemente en la app!</string>
+    <string name="banner_process_error">❌ Error al procesar la imagen. Intenta de nuevo con una imagen local.</string>
+    <string name="shop_title_format">Tienda de %1$s</string>
+    <string name="edit_product_toast">Editar: %1$s</string>
+    <string name="delete_dialog_title">Borrar Producto</string>
+    <string name="confirm_delete_msg">¿Estás seguro de que quieres eliminar \'%1$s\'?</string>
+    <string name="dialog_yes">Sí</string>
+    <string name="dialog_no">No</string>
+    <string name="deleted_toast">¡Eliminado!</string>
+    <string name="my_products_label">Mis productos</string>
+    <string name="banner_placeholder_text">Toca para añadir un banner</string>
+    <string name="content_desc_banner">Banner editable del Streamer</string>
+    <string name="content_desc_upload_icon">Icono subir</string>
+    <string name="content_desc_add_product">Añadir Producto</string>
+
+    <string name="title_new_product">Nuevo Producto</string>
+    <string name="title_edit_product">Editar Producto</string>
+    <string name="hint_product_name">Nombre del producto</string>
+    <string name="hint_description">Descripción</string>
+    <string name="hint_price_base">Precio Base</string>
+    <string name="checkbox_offer">Activar Oferta</string>
+    <string name="hint_price_offer">Precio Rebajado</string>
+    <string name="label_image_optional">Imagen del producto (Opcional)</string>
+    <string name="btn_camera">CÁMARA</string>
+    <string name="btn_gallery">GALERÍA</string>
+    <string name="btn_save_product">GUARDAR PRODUCTO</string>
+    <string name="btn_update_product">ACTUALIZAR PRODUCTO</string>
+    <string name="msg_camera_saved">Imagen de cámara copiada localmente.</string>
+    <string name="msg_camera_error">Error al copiar la imagen de la cámara.</string>
+    <string name="msg_gallery_saved">Imagen copiada localmente.</string>
+    <string name="msg_gallery_error">Error al copiar la imagen. Usa una imagen local.</string>
+    <string name="error_price_zero">El precio debe ser mayor que 0.</string>
+    <string name="error_offer_price_invalid">El precio de oferta no puede ser superior al precio base.</string>
+    <string name="msg_product_created">¡Producto creado correctamente!</string>
+    <string name="msg_product_updated">¡Producto actualizado correctamente!</string>
+    <string name="error_required_fields">Nombre y Precio son obligatorios</string>
+    <string name="euro_suffix">€</string>
+
+
+    <string name="error_empty_fields">Rellena todos los campos</string>
+    <string name="error_login_incorrect">Datos incorrectos</string>
+    <string name="error_role_viewer">¡Eres un espectador! Ve a la pantalla de Viewer.</string>
+    <string name="error_role_streamer">Este usuario es Streamer, ¡entra por la otra pantalla!</string>
+    <string name="msg_shop_created">¡Tienda creada!</string>
+    <string name="msg_account_created">¡Cuenta creada!</string>
+    <string name="error_user_exists">Este nombre ya existe</string>
+    <string name="mode_creator">Modo Creador</string>
+    <string name="mode_viewer">Modo Espectador</string>
+
+    <string name="scan_cancelled">Escaneo cancelado</string>
+    <string name="scan_prompt">Escanea el QR del Streamer</string>
+    <string name="error_self_shop">¡No puedes añadir tu propia tienda!</string>
+    <string name="error_qr_user_not_found">Error: Este código no corresponde a ningún usuario.</string>
+    <string name="error_qr_not_streamer">Error: ¡Este usuario no es un Streamer!</string>
+    <string name="error_shop_already_added">¡Ya tienes esta lista añadida!</string>
+    <string name="msg_shop_added">¡Tienda añadida correctamente!</string>
+    <string name="error_qr_invalid">Código QR inválido</string>
+
+
+    <string name="error_invalid_session_data">Error: Datos de sesión inválidos</string>
+    <string name="msg_added_to_cart_format">¡%1$s añadido al carrito!</string>
+    <string name="error_product_not_found_session">Error: Producto o sesión no encontrados</string>
+    <string name="msg_product_not_found">Producto no encontrado.</string>
+    <string name="msg_unit_added">¡Unidad añadida al carrito!</string>
+    <string name="msg_product_added">¡Producto añadido al carrito!</string>
+    <string name="msg_cart_empty">El carrito está vacío</string>
+    <string name="error_pay_empty">No puedes pagar un carrito vacío</string>
+    <string name="payment_title">Pasarela de Pago</string>
+    <string name="payment_msg_format">El importe total es de %1$s.\n\n¿Quieres proceder al pago?</string>
+    <string name="btn_pay_now">PAGAR AHORA</string>
+    <string name="btn_cancel">Cancelar</string>
+    <string name="msg_connecting_bank">Conectando con el banco...</string>
+    <string name="msg_payment_success_format">✅ Pago de %1$s recibido. ¡Gracias!</string>
+
+    <string name="cart_title">Tu Carrito</string>
+    <string name="label_subtotal">Subtotal:</string>
+    <string name="label_total">TOTAL:</string>
+    <string name="btn_checkout_process">FINALIZAR COMPRA</string>
+    <string name="label_description">Descripción</string>
+    <string name="btn_add_to_cart_layout">Añadir al carrito</string>
+    <string name="store_stock_label">Productos en stock</string>
+    <string name="content_desc_store_banner">Banner de la tienda</string>
+    <string name="content_desc_go_to_cart">Ir al carrito</string>
+    <string name="viewer_visited_shops">Tiendas Visitadas</string>
+    <string name="content_desc_scan_qr">Escanear Código QR</string>
+    <string name="sample_description_text">Descripción del producto...</string>
+
+
+    <string name="title_streamer_access">Acceso Creador</string>
+    <string name="subtitle_streamer_access">Inicia sesión o regístrate para gestionar tu tienda.</string>
+    <string name="hint_username">Nombre de Usuario</string>
+    <string name="hint_password">Contraseña</string>
+    <string name="btn_login_text">INICIAR SESIÓN</string>
+    <string name="btn_register_text">REGÍSTRATE AHORA</string>
+    <string name="title_viewer_access">Acceso Espectador</string>
+    <string name="subtitle_viewer_access">Inicia sesión para ver tus tiendas visitadas.</string>
+    <string name="app_title_main">MERCHSTREAM</string>
+    <string name="app_subtitle_main">Tu mundo, tus productos.</string>
+    <string name="instruction_creator">CREADOR | Desliza Arriba</string>
+    <string name="instruction_viewer">ESPECTADOR | Desliza Abajo</string>
+    <string name="content_desc_app_logo">Logotipo de la aplicación</string>
+
+
+    <string name="placeholder_streamer_name">Nombre del Streamer</string>
+    <string name="placeholder_last_visit_date">Última visita: 12/12/2025</string>
+    <string name="placeholder_product_name">Nombre Producto</string>
+    <string name="placeholder_cart_info">2 x 15.0€ = 30.0€</string>
+    <string name="content_desc_remove_one">Restar 1</string>
+    <string name="content_desc_remove_all">Eliminar todo</string>
+    <string name="placeholder_image_product">Imagen del producto</string>
+    <string name="label_offer_badge">OFERTA</string>
+    <string name="placeholder_price">49.99€</string>
+    <string name="placeholder_shop_name">Nombre de la Tienda / Streamer</string>
+    <string name="placeholder_last_visit_today">Última visita: Hoy</string>
+</resources>

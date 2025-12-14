@@ -19,13 +19,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingBottom="100dp"> <ImageView
-            android:id="@+id/iv_product_detail_image"
-            android:layout_width="match_parent"
-            android:layout_height="350dp"
-            android:scaleType="centerCrop"
-            android:src="@android:color/darker_gray"
-            android:contentDescription="Imatge del producte"/>
+            android:paddingBottom="100dp">
+
+            <ImageView
+                android:id="@+id/iv_product_detail_image"
+                android:layout_width="match_parent"
+                android:layout_height="350dp"
+                android:scaleType="centerCrop"
+                android:src="@android:color/darker_gray"
+                android:contentDescription="@string/label_image_optional"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -37,7 +39,7 @@
                     android:id="@+id/tv_product_detail_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Nom del Producte Llarg"
+                    tools:text="Nom del Producte"
                     android:textColor="@android:color/white"
                     android:textSize="28sp"
                     android:textStyle="bold"
@@ -53,7 +55,7 @@
                         android:id="@+id/tv_product_detail_price"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="99.99€"
+                        tools:text="99.99€"
                         android:textColor="#FF5722"
                         android:textSize="28sp"
                         android:textStyle="bold"
@@ -63,7 +65,7 @@
                         android:id="@+id/tv_product_detail_price_original"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="129.99€"
+                        tools:text="129.99€"
                         android:textColor="#AAAAAA"
                         android:textSize="18sp"
                         android:textStyle="italic"
@@ -92,7 +94,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Descripció"
+                        android:text="@string/label_description"
                         android:textColor="#FFFFFF"
                         android:textSize="18sp"
                         android:textStyle="bold"/>
@@ -102,7 +104,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="Aquesta és una descripció molt detallada del producte que farà que el vulguis comprar immediatament."
+                        android:text="@string/sample_description_text"
                         android:textColor="#CCCCCC"
                         android:textSize="14sp" />
                 </LinearLayout>
@@ -114,7 +116,7 @@
         android:id="@+id/btn_add_to_cart"
         android:layout_width="0dp"
         android:layout_height="60dp"
-        android:text="Afegeix al carretó"
+        android:text="@string/btn_add_to_cart_layout"
         android:backgroundTint="#6200EE"
         android:textColor="@android:color/white"
         android:textSize="16sp"

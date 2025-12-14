@@ -38,8 +38,7 @@ class ProductFormActivity : AppCompatActivity() {
 
     private lateinit var ivPreview: ImageView
     private var currentPhotoUri: Uri? = null
-    // ELIMINAT: private var tempPhotoUri: Uri? = null
-    private var currentTempPhotoPath: String? = null // RUTA ABSOLUTA DEL FITXER TEMPORAL DE LA CÀMERA
+    private var currentTempPhotoPath: String? = null
     private var streamerId: Int = -1
     private var productIdToEdit: Int = -1
 
@@ -71,9 +70,11 @@ class ProductFormActivity : AppCompatActivity() {
                                 Log.e("ProductForm", "Error al carregar la imatge de la càmera amb decodeFile: ${e.message}")
                                 ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
                             }
-                            Toast.makeText(this@ProductFormActivity, "Imatge de càmera copiada localment.", Toast.LENGTH_SHORT).show()
+                            // TEXT TRADUÏT
+                            Toast.makeText(this@ProductFormActivity, getString(R.string.msg_camera_saved), Toast.LENGTH_SHORT).show()
                         } else {
-                            Toast.makeText(this@ProductFormActivity, "Error al copiar la imatge de la càmera.", Toast.LENGTH_LONG).show()
+                            // TEXT TRADUÏT
+                            Toast.makeText(this@ProductFormActivity, getString(R.string.msg_camera_error), Toast.LENGTH_LONG).show()
                         }
                     }
                 }
@@ -111,9 +112,11 @@ class ProductFormActivity : AppCompatActivity() {
                             ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
                         }
 
-                        Toast.makeText(this@ProductFormActivity, "Imatge copiada localment.", Toast.LENGTH_SHORT).show()
+                        // TEXT TRADUÏT
+                        Toast.makeText(this@ProductFormActivity, getString(R.string.msg_gallery_saved), Toast.LENGTH_SHORT).show()
                     } else {
-                        Toast.makeText(this@ProductFormActivity, "Error al copiar la imatge. Utilitza una imatge local.", Toast.LENGTH_LONG).show()
+                        // TEXT TRADUÏT
+                        Toast.makeText(this@ProductFormActivity, getString(R.string.msg_gallery_error), Toast.LENGTH_LONG).show()
                     }
                 }
             }
@@ -142,8 +145,6 @@ class ProductFormActivity : AppCompatActivity() {
         val btnCamera = findViewById<Button>(R.id.btn_camera)
         val btnGaleria = findViewById<Button>(R.id.btn_galeria)
         val btnGuardar = findViewById<Button>(R.id.btn_guardar_prod)
-
-        // --- CAMPS D'OFERTA ---
         val cbOferta = findViewById<CheckBox>(R.id.cb_es_oferta)
         val etPreuOferta = findViewById<EditText>(R.id.et_preu_oferta)
 
@@ -154,13 +155,13 @@ class ProductFormActivity : AppCompatActivity() {
 
         // 3. SI ESTEM EN MODE EDICIÓ, CARREGUEM DADES
         if (productIdToEdit != -1) {
-            tvTitleForm.text = "Editar Producte"
-            btnGuardar.text = "ACTUALITZAR PRODUCTE"
+            // TEXT TRADUÏT
+            tvTitleForm.text = getString(R.string.title_edit_product)
+            btnGuardar.text = getString(R.string.btn_update_product)
 
             lifecycleScope.launch(Dispatchers.IO) {
                 val prod = AppSingleton.getInstance().db.producteDao().getProducteById(productIdToEdit)
 
-                // +++ DEPURACIÓ: LOGS D'INICI +++
                 Log.d("DEBUG_IMATGE", "Producte carregat per edició:")
                 Log.d("DEBUG_IMATGE", "  - Nom: ${prod?.nom}")
                 Log.d("DEBUG_IMATGE", "  - imatgeUri: ${prod?.imatgeUri}")
@@ -181,7 +182,7 @@ class ProductFormActivity : AppCompatActivity() {
                             etPreuOferta.setText("")
                         }
 
-                        // +++ CARREGAR IMATGE EXISTENT (VERSIÓ CORREGIDA) +++
+                        // +++ CARREGAR IMATGE EXISTENT (Lògica mantinguda) +++
                         if (!prod.imatgeUri.isNullOrEmpty()) {
                             lifecycleScope.launch(Dispatchers.IO) {
                                 try {
@@ -189,88 +190,51 @@ class ProductFormActivity : AppCompatActivity() {
                                     Log.d("DEBUG_IMATGE", "Intentant obrir URI: $savedUri, Scheme: ${savedUri.scheme}")
 
                                     var inputStream: java.io.InputStream? = null
-
-                                    // Estratègia 1: ContentResolver per a URIs content://
                                     if (savedUri.scheme == "content") {
-                                        try {
-                                            inputStream = contentResolver.openInputStream(savedUri)
-                                            Log.d("DEBUG_IMATGE", "Obert amb ContentResolver")
-                                        } catch (e: SecurityException) {
-                                            Log.e("DEBUG_IMATGE", "Permís denegat per contentResolver: ${e.message}")
-                                        } catch (e: Exception) {
-                                            Log.e("DEBUG_IMATGE", "Error amb contentResolver: ${e.message}")
-                                        }
+                                        try { inputStream = contentResolver.openInputStream(savedUri) } catch (_: Exception) {}
                                     }
-
-                                    // Estratègia 2: FileInputStream per a URIs file://
                                     if (inputStream == null && savedUri.scheme == "file") {
                                         try {
                                             val file = File(savedUri.path ?: "")
-                                            if (file.exists()) {
-                                                inputStream = FileInputStream(file)
-                                                Log.d("DEBUG_IMATGE", "Obert amb FileInputStream")
-                                            } else {
-                                                Log.e("DEBUG_IMATGE", "Fitxer no existeix: ${file.absolutePath}")
-                                            }
-                                        } catch (e: Exception) {
-                                            Log.e("DEBUG_IMATGE", "Error amb FileInputStream: ${e.message}")
-                                        }
+                                            if (file.exists()) { inputStream = FileInputStream(file) }
+                                        } catch (_: Exception) {}
                                     }
 
-                                    // Processar InputStream si existeix
                                     inputStream?.use { stream ->
                                         val bitmap = BitmapFactory.decodeStream(stream)
 
                                         withContext(Dispatchers.Main) {
-                                            Log.d("DEBUG_MAIN", "Estic al thread principal")
                                             if (bitmap != null) {
-                                                Log.d("DEBUG_MAIN", "Bitmap dimensions: ${bitmap.width}x${bitmap.height}")
                                                 ivPreview.setImageBitmap(bitmap)
                                                 ivPreview.scaleType = ImageView.ScaleType.CENTER_CROP
-                                                ivPreview.requestLayout()
-                                                ivPreview.invalidate()
                                                 currentPhotoUri = savedUri
-                                                Log.d("DEBUG_LAYOUT", "ImageView dimensions: ${ivPreview.width}x${ivPreview.height}")
-                                                Log.d("DEBUG_IMATGE", "Imatge carregada correctament des de: $savedUri")
                                             } else {
-                                                Log.d("DEBUG_IMATGE", "Bitmap és null després de decodeStream")
                                                 ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
                                             }
                                         }
                                     } ?: run {
-                                        // Si no es pot obrir l'InputStream
-                                        withContext(Dispatchers.Main) {
-                                            ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
-                                            Log.e("DEBUG_IMATGE", "No s'ha pogut obrir InputStream per a: $savedUri")
-                                        }
+                                        withContext(Dispatchers.Main) { ivPreview.setImageResource(android.R.drawable.ic_menu_camera) }
                                     }
 
-                                } catch (e: SecurityException) {
-                                    Log.e("DEBUG_IMATGE", "Permís denegat per llegir la URI: ${e.message}")
-                                    withContext(Dispatchers.Main) {
-                                        ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
-                                    }
                                 } catch (e: Exception) {
                                     Log.e("DEBUG_IMATGE", "Error general carregant imatge: ${e.message}")
-                                    withContext(Dispatchers.Main) {
-                                        ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
-                                    }
+                                    withContext(Dispatchers.Main) { ivPreview.setImageResource(android.R.drawable.ic_menu_camera) }
                                 }
                             }
                         } else {
-                            // Si no hi ha URI
                             ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
                         }
                     } else {
                         // Si l'ID d'edició falla...
                         productIdToEdit = -1
-                        tvTitleForm.text = "Nou Producte"
-                        btnGuardar.text = "GUARDAR PRODUCTE"
+                        tvTitleForm.text = getString(R.string.title_new_product)
+                        btnGuardar.text = getString(R.string.btn_save_product)
                     }
                 }
             }
         } else {
-            tvTitleForm.text = "Nou Producte"
+            // TEXT TRADUÏT
+            tvTitleForm.text = getString(R.string.title_new_product)
             etPreuOferta.isEnabled = false
         }
 
@@ -289,26 +253,24 @@ class ProductFormActivity : AppCompatActivity() {
             val preuStr = etPreu.text.toString()
             val desc = etDesc.text.toString()
 
-            // Recollim dades d'oferta
             val esOferta = cbOferta.isChecked
             val preuOferta = etPreuOferta.text.toString().toDoubleOrNull() ?: 0.0
 
             if (nom.isNotEmpty() && preuStr.isNotEmpty()) {
                 val preu = preuStr.toDoubleOrNull() ?: 0.0
                 if (preu <= 0.0) {
-                    Toast.makeText(this, "El preu ha de ser superior a 0.", Toast.LENGTH_SHORT).show()
+                    // TEXT TRADUÏT
+                    Toast.makeText(this, getString(R.string.error_price_zero), Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
 
                 if (esOferta && preuOferta >= preu) {
-                    Toast.makeText(this, "El preu d'oferta no pot ser superior al preu base.", Toast.LENGTH_LONG).show()
+                    // TEXT TRADUÏT
+                    Toast.makeText(this, getString(R.string.error_offer_price_invalid), Toast.LENGTH_LONG).show()
                     return@setOnClickListener
                 }
 
                 val uriString = currentPhotoUri?.toString()
-
-                // +++ DEPURACIÓ: LOGS DE GUARDAR +++
-                Log.d("DEBUG_IMATGE", "URI a guardar: $uriString")
 
                 lifecycleScope.launch(Dispatchers.IO) {
                     val dao = AppSingleton.getInstance().db.producteDao()
@@ -323,22 +285,23 @@ class ProductFormActivity : AppCompatActivity() {
                         idCreador = streamerId
                     )
 
-                    if (productIdToEdit == -1) {
+                    val missatgeId = if (productIdToEdit == -1) {
                         dao.addProducte(nouProducte)
-                        Log.d("DEBUG_IMATGE", "Producte NOU guardat amb URI: $uriString")
+                        R.string.msg_product_created
                     } else {
                         dao.updateProducte(nouProducte)
-                        Log.d("DEBUG_IMATGE", "Producte ACTUALITZAT amb URI: $uriString")
+                        R.string.msg_product_updated
                     }
 
                     withContext(Dispatchers.Main) {
-                        val missatge = if (productIdToEdit == -1) "Producte creat correctament!" else "Producte actualitzat correctament!"
-                        Toast.makeText(this@ProductFormActivity, missatge, Toast.LENGTH_SHORT).show()
+                        // TEXT TRADUÏT
+                        Toast.makeText(this@ProductFormActivity, getString(missatgeId), Toast.LENGTH_SHORT).show()
                         finish()
                     }
                 }
             } else {
-                Toast.makeText(this, "Nom i Preu són obligatoris", Toast.LENGTH_SHORT).show()
+                // TEXT TRADUÏT
+                Toast.makeText(this, getString(R.string.error_required_fields), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -353,13 +316,10 @@ class ProductFormActivity : AppCompatActivity() {
             contentResolver.openInputStream(originalUri)?.use { inputStream ->
                 FileOutputStream(destinationFile).use { outputStream ->
                     inputStream.copyTo(outputStream)
-                    Log.d("GalleryCopy", "Fitxer copiat correctament des de Galeria. Mida: ${destinationFile.length()} bytes")
-                    // Retornem la ruta absoluta
                     return destinationFile.absolutePath
                 }
             }
         } catch (e: Exception) {
-            Log.e("GalleryCopy", "Error copiant fitxer des de URI: ${e.message}")
             e.printStackTrace()
         }
         return null
@@ -383,7 +343,6 @@ class ProductFormActivity : AppCompatActivity() {
         }
 
         photoFile?.also {
-            // Guarda la ruta absoluta per a ús posterior (per a la còpia de fitxers)
             currentTempPhotoPath = it.absolutePath
 
             val photoURI: Uri = FileProvider.getUriForFile(
@@ -402,10 +361,7 @@ class ProductFormActivity : AppCompatActivity() {
         val fileName = "prod_${streamerId}_${timeStamp}.jpg"
         val destinationFile = File(filesDir, fileName)
 
-        Log.d("CameraCopy", "Intentant copiar fitxer des de: $sourcePath")
-
         if (!sourceFile.exists()) {
-            Log.e("CameraCopy", "Fitxer d'origen temporal no trobat a: $sourcePath")
             return null
         }
 
@@ -414,21 +370,13 @@ class ProductFormActivity : AppCompatActivity() {
                 FileOutputStream(destinationFile).use { outputStream ->
                     inputStream.copyTo(outputStream)
 
-                    val fileSize = destinationFile.length()
                     // Després de copiar, esborrem el fitxer temporal!
-                    val deleted = sourceFile.delete()
-                    Log.d("CameraCopy", "Fitxer copiat correctament. Mida: $fileSize bytes. Esborrat temporal: $deleted")
-
-                    // Si el fitxer es va copiar però té mida zero
-                    if (fileSize == 0L) {
-                        Log.e("CameraCopy", "ADVERTÈNCIA: El fitxer copiat té una mida de 0 bytes.")
-                    }
+                    sourceFile.delete()
 
                     return destinationFile.absolutePath
                 }
             }
         } catch (e: Exception) {
-            Log.e("CameraCopy", "Error copiant fitxer: ${e.message}")
             e.printStackTrace()
         }
         return null
@@ -437,7 +385,6 @@ class ProductFormActivity : AppCompatActivity() {
     @Throws(IOException::class)
     private fun crearFitxerImatge(): File {
         val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        // El fitxer es crea a l'emmagatzematge extern específic de l'aplicació, al subdirectori Pictures
         val storageDir: File? = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
         return File.createTempFile("JPEG_${timeStamp}_", ".jpg", storageDir)
     }

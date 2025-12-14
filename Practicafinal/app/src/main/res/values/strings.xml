@@ -1,3 +1,120 @@
 <resources>
-    <string name="app_name">Practica final</string>
+    <string name="app_name">MerchApp</string>
+
+    <string name="dashboard_loaded_msg">Dashboard carregat. ID: %1$d</string>
+    <string name="error_session_invalid">Error: No s\'ha pogut carregar l\'usuari Streamer. Sessió invàlida.</string>
+    <string name="banner_saved_success">✅ Banner guardat permanentment a l\'app!</string>
+    <string name="banner_process_error">❌ Error al processar la imatge. Torna a intentar amb una imatge local.</string>
+    <string name="shop_title_format">Botiga de %1$s</string>
+    <string name="edit_product_toast">Editar: %1$s</string>
+    <string name="delete_dialog_title">Esborrar Producte</string>
+    <string name="confirm_delete_msg">Estàs segur que vols eliminar \'%1$s\'?</string>
+    <string name="dialog_yes">Sí</string>
+    <string name="dialog_no">No</string>
+    <string name="deleted_toast">Eliminat!</string>
+    <string name="my_products_label">Els meus productes</string>
+    <string name="banner_placeholder_text">Toca per afegir un bàner</string>
+    <string name="content_desc_banner">Banner editable del Streamer</string>
+    <string name="content_desc_upload_icon">Icona pujar</string>
+    <string name="content_desc_add_product">Afegir Producte</string>
+
+    <string name="title_new_product">Nou Producte</string>
+    <string name="title_edit_product">Editar Producte</string>
+    <string name="hint_product_name">Nom del producte</string>
+    <string name="hint_description">Descripció</string>
+    <string name="hint_price_base">Preu Base</string>
+    <string name="checkbox_offer">Activar Oferta</string>
+    <string name="hint_price_offer">Preu Rebaixat</string>
+    <string name="label_image_optional">Imatge del producte (Opcional)</string>
+    <string name="btn_camera">CÀMERA</string>
+    <string name="btn_gallery">GALERIA</string>
+    <string name="btn_save_product">GUARDAR PRODUCTE</string>
+    <string name="btn_update_product">ACTUALITZAR PRODUCTE</string>
+    <string name="msg_camera_saved">Imatge de càmera copiada localment.</string>
+    <string name="msg_camera_error">Error al copiar la imatge de la càmera.</string>
+    <string name="msg_gallery_saved">Imatge copiada localment.</string>
+    <string name="msg_gallery_error">Error al copiar la imatge. Utilitza una imatge local.</string>
+    <string name="error_price_zero">El preu ha de ser superior a 0.</string>
+    <string name="error_offer_price_invalid">El preu d\'oferta no pot ser superior al preu base.</string>
+    <string name="msg_product_created">Producte creat correctament!</string>
+    <string name="msg_product_updated">Producte actualitzat correctament!</string>
+    <string name="error_required_fields">Nom i Preu són obligatoris</string>
+    <string name="euro_suffix">€</string>
+
+    <string name="error_empty_fields">Omple tots els camps</string>
+    <string name="error_login_incorrect">Dades incorrectes</string>
+    <string name="error_role_viewer">Ets un espectador! Ves a la pantalla de Viewer.</string>
+    <string name="error_role_streamer">Aquest usuari és Streamer, entra per l\'altra pantalla!</string>
+    <string name="msg_shop_created">Botiga creada!</string>
+    <string name="msg_account_created">Compte creat!</string>
+    <string name="error_user_exists">Aquest nom ja existeix</string>
+    <string name="mode_creator">Mode Creador</string>
+    <string name="mode_viewer">Mode Espectador</string>
+
+    <string name="scan_cancelled">Escaneig cancel·lat</string>
+    <string name="scan_prompt">Escaneja el QR del Streamer</string>
+    <string name="error_self_shop">No pots afegir la teva pròpia botiga!</string>
+    <string name="error_qr_user_not_found">Error: Aquest codi no correspon a cap usuari.</string>
+    <string name="error_qr_not_streamer">Error: Aquest usuari no és un Streamer!</string>
+    <string name="error_shop_already_added">Ja tens aquesta llista afegida!</string>
+    <string name="msg_shop_added">Botiga afegida correctament!</string>
+    <string name="error_qr_invalid">Codi QR invàlid</string>
+
+
+    <string name="error_invalid_session_data">Error: Dades de sessió invàlides</string>
+    <string name="msg_added_to_cart_format">%1$s afegit al carro!</string>
+    <string name="error_product_not_found_session">Error: Producte o sessió no trobats</string>
+    <string name="msg_product_not_found">Producte no trobat.</string>
+    <string name="msg_unit_added">Unitat afegida al carretó!</string>
+    <string name="msg_product_added">Producte afegit al carretó!</string>
+    <string name="msg_cart_empty">El carretó és buit</string>
+    <string name="error_pay_empty">No pots pagar un carretó buit</string>
+    <string name="payment_title">Passarel·la de Pagament</string>
+    <string name="payment_msg_format">L\'import total és de %1$s.\n\nVols procedir al pagament?</string>
+    <string name="btn_pay_now">PAGAR ARA</string>
+    <string name="btn_cancel">Cancel·lar</string>
+    <string name="msg_connecting_bank">Connectant amb el banc...</string>
+    <string name="msg_payment_success_format">✅ Pagament de %1$s rebut. Gràcies!</string>
+
+
+    <string name="cart_title">El teu Carretó</string>
+    <string name="label_subtotal">Subtotal:</string>
+    <string name="label_total">TOTAL:</string>
+    <string name="btn_checkout_process">FINALITZA LA COMPRA</string>
+    <string name="label_description">Descripció</string>
+    <string name="btn_add_to_cart_layout">Afegeix al carretó</string>
+    <string name="store_stock_label">Productes en estoc</string>
+    <string name="content_desc_store_banner">Banner de la botiga</string>
+    <string name="content_desc_go_to_cart">Anar al carretó</string>
+    <string name="viewer_visited_shops">Botigues Visitades</string>
+    <string name="content_desc_scan_qr">Escanejar Codi QR</string>
+    <string name="sample_description_text">Descripció del producte...</string>
+
+
+    <string name="title_streamer_access">Accés Creador</string>
+    <string name="subtitle_streamer_access">Inicia sessió o registra\'t per gestionar la teva botiga.</string>
+    <string name="hint_username">Nom d\'Usuari</string>
+    <string name="hint_password">Contrasenya</string>
+    <string name="btn_login_text">INICIA SESSIÓ</string>
+    <string name="btn_register_text">REGISTRA\'T ARA</string>
+    <string name="title_viewer_access">Accés Espectador</string>
+    <string name="subtitle_viewer_access">Inicia sessió per veure les teves botigues visitades.</string>
+    <string name="app_title_main">MERCHSTREAM</string>
+    <string name="app_subtitle_main">El teu món, els teus productes.</string>
+    <string name="instruction_creator">CREADOR | Llisca Amunt</string>
+    <string name="instruction_viewer">ESPECTADOR | Llisca Avall</string>
+    <string name="content_desc_app_logo">Logotip de l\'aplicació</string>
+
+
+    <string name="placeholder_streamer_name">Nom del Streamer</string>
+    <string name="placeholder_last_visit_date">Última visita: 12/12/2025</string>
+    <string name="placeholder_product_name">Nom Producte</string>
+    <string name="placeholder_cart_info">2 x 15.0€ = 30.0€</string>
+    <string name="content_desc_remove_one">Restar 1</string>
+    <string name="content_desc_remove_all">Eliminar tot</string>
+    <string name="placeholder_image_product">Imatge del producte</string>
+    <string name="label_offer_badge">OFERTA</string>
+    <string name="placeholder_price">49.99€</string>
+    <string name="placeholder_shop_name">Nom de la Botiga / Streamer</string>
+    <string name="placeholder_last_visit_today">Última visita: Avui</string>
 </resources>

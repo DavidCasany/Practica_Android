@@ -39,13 +39,15 @@ class StreamerLoginActivity : AppCompatActivity() {
                             if (usuari.esStreamer) {
                                 anarAlDashboard(usuari)
                             } else {
-                                Toast.makeText(this@StreamerLoginActivity, "Ets un espectador! Ves a la pantalla de Viewer.", Toast.LENGTH_LONG).show()
+                                Toast.makeText(this@StreamerLoginActivity, getString(R.string.error_role_viewer), Toast.LENGTH_LONG).show()
                             }
                         } else {
-                            Toast.makeText(this@StreamerLoginActivity, "Dades incorrectes", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@StreamerLoginActivity, getString(R.string.error_login_incorrect), Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
+            } else {
+                Toast.makeText(this, getString(R.string.error_empty_fields), Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -65,39 +67,31 @@ class StreamerLoginActivity : AppCompatActivity() {
 
                         val usuariCreat = dao.getLogin(nom, pass)
                         withContext(Dispatchers.Main) {
-                            Toast.makeText(this@StreamerLoginActivity, "Botiga creada!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@StreamerLoginActivity, getString(R.string.msg_shop_created), Toast.LENGTH_SHORT).show()
                             if (usuariCreat != null) anarAlDashboard(usuariCreat)
                         }
                     } else {
                         withContext(Dispatchers.Main) {
-                            Toast.makeText(this@StreamerLoginActivity, "Aquest nom ja existeix", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@StreamerLoginActivity, getString(R.string.error_user_exists), Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
+            } else {
+                Toast.makeText(this, getString(R.string.error_empty_fields), Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    /**
-     * CORRECCIÓ CLAU: Guardar l'ID com a USER_ID a SharedPreferences
-     * i passar la flag IS_STREAMER.
-     * Això garanteix que les pantalles com CreatorDashboardActivity i altres
-     * puguin carregar dades correctament a l'inici.
-     */
     private fun anarAlDashboard(usuari: Usuari) {
         val prefs = getSharedPreferences("MerchStreamPrefs", MODE_PRIVATE)
         prefs.edit().apply {
-            // AQUESTA LÍNIA ÉS CLAU: Guarda l'ID sota la clau que fan servir totes les activitats
             putInt("USER_ID", usuari.uid)
-
-            // També guardem STREAMER_ID i la flag (per seguretat i claredat)
             putInt("STREAMER_ID", usuari.uid)
             putBoolean("IS_STREAMER", true)
             apply()
         }
 
         val intent = Intent(this, CreatorDashboardActivity::class.java)
-        // Passem la ID via Intent per si l'activitat la necessita immediatament
         intent.putExtra("STREAMER_ID", usuari.uid)
         startActivity(intent)
         finish()

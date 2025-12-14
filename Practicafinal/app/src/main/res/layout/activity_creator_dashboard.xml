@@ -24,7 +24,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="centerCrop"
-            android:contentDescription="Banner editable del Streamer" />
+            android:contentDescription="@string/content_desc_banner" />
 
         <LinearLayout
             android:id="@+id/layout_banner_placeholder"
@@ -41,12 +41,12 @@
                 android:layout_height="48dp"
                 android:src="@android:drawable/ic_menu_camera"
                 app:tint="#88FFFFFF"
-                android:contentDescription="Icona pujar" />
+                android:contentDescription="@string/content_desc_upload_icon" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Toca per afegir un bàner"
+                android:text="@string/banner_placeholder_text"
                 android:textColor="#88FFFFFF"
                 android:textSize="14sp"
                 android:layout_marginTop="8dp"
@@ -72,7 +72,7 @@
         android:id="@+id/tv_dashboard_subtitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Els meus productes"
+        android:text="@string/my_products_label"
         android:textSize="22sp"
         android:textStyle="bold"
         android:fontFamily="sans-serif-light"
@@ -101,7 +101,7 @@
         android:layout_marginEnd="24dp"
         android:layout_marginBottom="24dp"
         android:clickable="true"
-        android:contentDescription="Afegir Producte"
+        android:contentDescription="@string/content_desc_add_product"
         android:src="@android:drawable/ic_input_add"
         app:backgroundTint="#FF5722"
         app:tint="@android:color/white"

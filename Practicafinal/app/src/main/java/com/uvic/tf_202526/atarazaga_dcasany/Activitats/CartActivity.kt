@@ -1,7 +1,7 @@
 package com.uvic.tf_202526.atarazaga_dcasany.Activitats
 
 import android.os.Bundle
-import android.view.View // Import necessari
+import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -25,22 +25,23 @@ class CartActivity : AppCompatActivity() {
     private lateinit var rvCart: RecyclerView
     private lateinit var tvTotal: TextView
     private lateinit var tvSubtotal: TextView
-    private lateinit var tvSubtotalLabel: TextView // FIX 1: DECLARACIÓ DE LA NOVA VISTA
+    private lateinit var tvSubtotalLabel: TextView
     private var userId: Int = -1
 
     private var llistaCompra: List<CartItemDisplay> = emptyList()
-    private val df = DecimalFormat("#,##0.00€")
+
+    // Utilitzem el recurs 'euro_suffix' per a consistència
+    private val df by lazy { DecimalFormat("#,##0.00${getString(R.string.euro_suffix)}") }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_cart)
 
-        // 1. INICIALITZACIÓ DE VISTES
         rvCart = findViewById(R.id.rv_cart_items)
         rvCart.layoutManager = LinearLayoutManager(this)
         tvTotal = findViewById(R.id.tv_total_value)
         tvSubtotal = findViewById(R.id.tv_subtotal_value)
-        tvSubtotalLabel = findViewById(R.id.tv_subtotal_label) // FIX 2: INICIALITZACIÓ A ONCREATE
+        tvSubtotalLabel = findViewById(R.id.tv_subtotal_label)
         val btnCheckout = findViewById<Button>(R.id.btn_checkout)
 
         val prefs = getSharedPreferences("MerchStreamPrefs", MODE_PRIVATE)
@@ -57,17 +58,11 @@ class CartActivity : AppCompatActivity() {
         lifecycleScope.launch(Dispatchers.IO) {
             llistaCompra = AppSingleton.getInstance().db.carroDao().getCartItemsComplets(userId)
 
-            // 1. Càlcul del Total ORIGINAL (Sense descomptes aplicats) per al Subtotal
             val totalOriginal = llistaCompra.sumOf { it.preuOriginal * it.quantitat }
-
-            // 2. Càlcul del Total FINAL (Amb descomptes aplicats) per al Total
             val totalAmbOfertes = llistaCompra.sumOf { it.preuTotal }
-
-            // 3. Comprovem si hi ha ofertes actives
             val hiHaOfertes = llistaCompra.any { it.esOferta }
 
             withContext(Dispatchers.Main) {
-                // Instanciem l'adaptador
                 rvCart.adapter = CartAdapter(llistaCompra, object : CartAdapter.OnCartActionListener {
                     override fun onMinusClick(item: CartItemDisplay) {
                         gestionarResta(item)
@@ -77,36 +72,27 @@ class CartActivity : AppCompatActivity() {
                     }
                 })
 
-                // --- GESTIÓ DE VISIBILITAT I VALORS ---
                 if (hiHaOfertes) {
-                    // Mostrar Subtotal com a preu original
                     tvSubtotalLabel.visibility = View.VISIBLE
                     tvSubtotal.visibility = View.VISIBLE
                     tvSubtotal.text = df.format(totalOriginal)
-
-                    // Total és el preu final amb oferta
                     tvTotal.text = df.format(totalAmbOfertes)
                 } else {
-                    // Amagar Subtotal si no hi ha ofertes
                     tvSubtotalLabel.visibility = View.GONE
                     tvSubtotal.visibility = View.GONE
-
-                    // El Total mostra el preu sense descompte (que és igual al preu final)
                     tvTotal.text = df.format(totalAmbOfertes)
                 }
 
                 if (llistaCompra.isEmpty()) {
-                    // Si és buit, resetejar tot
                     tvTotal.text = df.format(0.0)
                     tvSubtotal.text = df.format(0.0)
                     tvSubtotalLabel.visibility = View.GONE
-                    Toast.makeText(this@CartActivity, "El carretó és buit", Toast.LENGTH_SHORT).show()
+                    // TEXT TRADUÏT
+                    Toast.makeText(this@CartActivity, getString(R.string.msg_cart_empty), Toast.LENGTH_SHORT).show()
                 }
             }
         }
     }
-
-    // --- FUNCIONS AUXILIARS DE GESTIÓ (ARA FUNCIONEN CORRECTAMENT PERQUÈ CARREGARCARRRO NO PETA) ---
 
     private fun gestionarResta(item: CartItemDisplay) {
         lifecycleScope.launch(Dispatchers.IO) {
@@ -115,42 +101,41 @@ class CartActivity : AppCompatActivity() {
             } else {
                 AppSingleton.getInstance().db.carroDao().deleteItemById(item.idItemCarro)
             }
-            carregarCarro() // Aquesta crida era la que petava
+            carregarCarro()
         }
     }
 
     private fun gestionarEliminar(item: CartItemDisplay) {
         lifecycleScope.launch(Dispatchers.IO) {
             AppSingleton.getInstance().db.carroDao().deleteItemById(item.idItemCarro)
-            carregarCarro() // Aquesta crida era la que petava
+            carregarCarro()
         }
     }
 
-    // --- FUNCIONS DE PAGAMENT ---
-
     private fun finalitzarCompra() {
-        // FIX: Eliminem el * 1.05
         val total = llistaCompra.sumOf { it.preuTotal }
 
         if (total <= 0.0) {
-            Toast.makeText(this, "No pots pagar un carretó buit", Toast.LENGTH_SHORT).show()
+            // TEXT TRADUÏT
+            Toast.makeText(this, getString(R.string.error_pay_empty), Toast.LENGTH_SHORT).show()
             return
         }
 
-        // Diàleg de confirmació
         AlertDialog.Builder(this)
-            .setTitle("Passarel·la de Pagament")
-            .setMessage("L'import total és de ${df.format(total)}.\n\nVols procedir al pagament?")
+            // TEXTOS TRADUÏTS
+            .setTitle(getString(R.string.payment_title))
+            .setMessage(getString(R.string.payment_msg_format, df.format(total)))
             .setIcon(android.R.drawable.ic_dialog_info)
-            .setPositiveButton("PAGAR ARA") { _, _ ->
+            .setPositiveButton(getString(R.string.btn_pay_now)) { _, _ ->
                 processarPagament(total)
             }
-            .setNegativeButton("Cancel·lar", null)
+            .setNegativeButton(getString(R.string.btn_cancel), null)
             .show()
     }
 
     private fun processarPagament(total: Double) {
-        Toast.makeText(this, "Connectant amb el banc...", Toast.LENGTH_SHORT).show()
+        // TEXT TRADUÏT
+        Toast.makeText(this, getString(R.string.msg_connecting_bank), Toast.LENGTH_SHORT).show()
 
         lifecycleScope.launch(Dispatchers.IO) {
             AppSingleton.getInstance().db.carroDao().buidarCarro(userId)
@@ -158,9 +143,9 @@ class CartActivity : AppCompatActivity() {
             Thread.sleep(1500)
 
             withContext(Dispatchers.Main) {
-                Toast.makeText(this@CartActivity, "✅ Pagament de ${df.format(total)} rebut. Gràcies!", Toast.LENGTH_LONG).show()
+                // TEXT TRADUÏT
+                Toast.makeText(this@CartActivity, getString(R.string.msg_payment_success_format, df.format(total)), Toast.LENGTH_LONG).show()
 
-                // Actualitzem la pantalla
                 llistaCompra = emptyList()
                 tvSubtotal.text = df.format(0.0)
                 tvTotal.text = df.format(0.0)
