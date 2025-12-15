@@ -117,4 +117,12 @@
     <string name="placeholder_price">49.99€</string>
     <string name="placeholder_shop_name">Nombre de la Tienda / Streamer</string>
     <string name="placeholder_last_visit_today">Última visita: Hoy</string>
+
+
+    <string name="about_app_name">MERCHSTREAM</string>
+    <string name="about_developed_by">Desarrollado por:</string>
+    <string name="about_name_1">David Casany</string>
+    <string name="about_name_2">Àlex Tarazaga</string>
+    <string name="about_custom_text">Estamos orgullosos de presentar una aplicación que engloba los contenidos de la asignatura y los requisitos de la práctica, y que además nos ha dado la oportunidad de experimentar con el estilo y la animación dentro del marco Android. Satisfechos con el trabajo realizado y por haber conseguido un producto que ofrece un servicio real.</string>
+    <string name="content_desc_about_logo">Logo grande de la aplicación</string>
 </resources>

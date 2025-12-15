@@ -117,4 +117,12 @@
     <string name="placeholder_price">49.99€</string>
     <string name="placeholder_shop_name">Shop / Streamer Name</string>
     <string name="placeholder_last_visit_today">Last visit: Today</string>
+
+
+    <string name="about_app_name">MERCHSTREAM</string>
+    <string name="about_developed_by">Developed by:</string>
+    <string name="about_name_1">David Casany</string>
+    <string name="about_name_2">Àlex Tarazaga</string>
+    <string name="about_custom_text">We are proud to present an application that encompasses the course contents and the assignment requirements, and has also given us the opportunity to experiment with style and animation within the Android framework. We are pleased with the work done and to have achieved a product that offers a real service.</string>
+    <string name="content_desc_about_logo">Big application logo</string>
 </resources>

@@ -21,7 +21,35 @@ class SplashActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
 
+        // Inicialitzem el detector de gestos
         mDetector = GestureDetectorCompat(this, MyGestureListener())
+
+        val logo = findViewById<ImageView>(R.id.iv_logo)
+
+        // --- NOU: Listener amb animació "d'enfonsament" ---
+        logo.setOnClickListener { view ->
+            // 1. Animem l'escala cap avall (es fa petit com si s'enfonsés)
+            view.animate()
+                .scaleX(0.95f) // Redueix al 85% d'amplada
+                .scaleY(0.95f) // Redueix al 85% d'alçada
+                .setDuration(20) // Ràpid (100ms)
+                .withEndAction {
+                    // 2. Quan acaba de fer-se petit, torna a la mida original (efecte rebot)
+                    view.animate()
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .setDuration(20)
+                        .withEndAction {
+                            // 3. Finalment, obrim la nova pantalla
+                            val intent = Intent(this, AboutActivity::class.java)
+                            startActivity(intent)
+                        }
+                        .start()
+                }
+                .start()
+        }
+
+        // Iniciem l'animació d'entrada (fade-in)
         iniciarAnimacio()
     }
 

@@ -62,7 +62,7 @@
         android:layout_marginBottom="24dp"
         android:clickable="true"
         android:contentDescription="@string/content_desc_go_to_cart"
-        android:src="@android:drawable/ic_menu_edit"
+        android:src="@drawable/ic_shopping_cart"
         app:backgroundTint="#FF5722"
         app:tint="@android:color/white"
         app:layout_constraintBottom_toBottomOf="parent"
