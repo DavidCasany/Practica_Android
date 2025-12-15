@@ -4,15 +4,16 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
-    app:cardCornerRadius="8dp"
-    app:cardElevation="2dp">
+    app:cardCornerRadius="12dp"
+    app:cardElevation="0dp"
+    app:cardBackgroundColor="#801A1A3A">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:padding="12dp">
+        android:padding="16dp">
 
         <LinearLayout
             android:layout_width="0dp"
@@ -24,18 +25,16 @@
                 android:id="@+id/tv_cart_nom"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Nom Producte"
+                android:text="@string/placeholder_product_name"
                 android:textStyle="bold"
-                android:textSize="16sp"/>
-
-            <TextView
-                android:id="@+id/tv_cart_info"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="2 x 15.0€ = 30.0€"
-                android:textSize="14sp"
-                android:textColor="#757575"/>
-        </LinearLayout>
+                android:textSize="18sp"
+                android:textColor="@android:color/white"/> <TextView
+            android:id="@+id/tv_cart_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/placeholder_cart_info"
+            android:textSize="14sp"
+            android:textColor="#CCCCCC"/> </LinearLayout>
 
         <ImageButton
             android:id="@+id/btn_cart_minus"
@@ -43,9 +42,8 @@
             android:layout_height="40dp"
             android:src="@android:drawable/ic_input_delete"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Restar 1"/>
-
-        <View android:layout_width="16dp" android:layout_height="1dp"/>
+            app:tint="#FFFFFF"
+            android:contentDescription="@string/content_desc_remove_one"/> <View android:layout_width="16dp" android:layout_height="1dp"/>
 
         <ImageButton
             android:id="@+id/btn_cart_delete"
@@ -53,8 +51,6 @@
             android:layout_height="40dp"
             android:src="@android:drawable/ic_menu_close_clear_cancel"
             android:background="?attr/selectableItemBackgroundBorderless"
-            app:tint="#D32F2F"
-            android:contentDescription="Eliminar tot"/>
-
-    </LinearLayout>
+            app:tint="#FF5252"
+            android:contentDescription="@string/content_desc_remove_all"/> </LinearLayout>
 </androidx.cardview.widget.CardView>

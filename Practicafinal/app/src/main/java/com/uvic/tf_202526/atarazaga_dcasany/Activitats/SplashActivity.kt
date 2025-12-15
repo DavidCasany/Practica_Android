@@ -5,9 +5,8 @@ import android.os.Bundle
 import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
-import android.view.View // NOU IMPORT per View.animate()
-import android.widget.ImageView // NOU IMPORT per ImageView
-import android.widget.TextView // NOU IMPORT per TextView
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GestureDetectorCompat
@@ -25,56 +24,49 @@ class SplashActivity : AppCompatActivity() {
         // Inicialitzem el detector de gestos
         mDetector = GestureDetectorCompat(this, MyGestureListener())
 
-        // NOU: Iniciem l'animació premium just després de carregar el layout
+        val logo = findViewById<ImageView>(R.id.iv_logo)
+
+        // --- NOU: Listener amb animació "d'enfonsament" ---
+        logo.setOnClickListener { view ->
+            // 1. Animem l'escala cap avall (es fa petit com si s'enfonsés)
+            view.animate()
+                .scaleX(0.95f) // Redueix al 85% d'amplada
+                .scaleY(0.95f) // Redueix al 85% d'alçada
+                .setDuration(20) // Ràpid (100ms)
+                .withEndAction {
+                    // 2. Quan acaba de fer-se petit, torna a la mida original (efecte rebot)
+                    view.animate()
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .setDuration(20)
+                        .withEndAction {
+                            // 3. Finalment, obrim la nova pantalla
+                            val intent = Intent(this, AboutActivity::class.java)
+                            startActivity(intent)
+                        }
+                        .start()
+                }
+                .start()
+        }
+
+        // Iniciem l'animació d'entrada (fade-in)
         iniciarAnimacio()
     }
 
-    // NOU: Funció per gestionar l'animació de fade-in
     private fun iniciarAnimacio() {
-        // Obtenim les vistes pel seu ID (assumint que s'ha aplicat el nou XML)
         val logo = findViewById<ImageView>(R.id.iv_logo)
         val title = findViewById<TextView>(R.id.tv_app_title)
         val subtitle = findViewById<TextView>(R.id.tv_app_subtitle)
         val streamerInst = findViewById<TextView>(R.id.tv_streamer_instruction)
         val viewerInst = findViewById<TextView>(R.id.tv_viewer_instruction)
 
-        // Animació del Logo (Aparició i petit desplaçament amunt)
-        logo.animate()
-            .alpha(1f)
-            .translationY(-20f)
-            .setDuration(1000)
-            .setStartDelay(300)
-            .start()
-
-        // Animació del Text Principal
-        title.animate()
-            .alpha(1f)
-            .setDuration(800)
-            .setStartDelay(1000)
-            .start()
-
-        // Animació del Subtítol
-        subtitle.animate()
-            .alpha(1f)
-            .setDuration(800)
-            .setStartDelay(1200)
-            .start()
-
-        // Animació de les Instruccions
-        streamerInst.animate()
-            .alpha(1f)
-            .setDuration(500)
-            .setStartDelay(1800)
-            .start()
-
-        viewerInst.animate()
-            .alpha(1f)
-            .setDuration(500)
-            .setStartDelay(1800)
-            .start()
+        logo.animate().alpha(1f).translationY(-20f).setDuration(1000).setStartDelay(300).start()
+        title.animate().alpha(1f).setDuration(800).setStartDelay(1000).start()
+        subtitle.animate().alpha(1f).setDuration(800).setStartDelay(1200).start()
+        streamerInst.animate().alpha(1f).setDuration(500).setStartDelay(1800).start()
+        viewerInst.animate().alpha(1f).setDuration(500).setStartDelay(1800).start()
     }
 
-    // Aquest mètode captura els tocs a la pantalla i els passa al detector
     override fun onTouchEvent(event: MotionEvent): Boolean {
         return if (mDetector.onTouchEvent(event)) {
             true
@@ -83,9 +75,7 @@ class SplashActivity : AppCompatActivity() {
         }
     }
 
-    // CLASSE INTERNA PER GESTIONAR ELS GESTOS
     private inner class MyGestureListener : GestureDetector.SimpleOnGestureListener() {
-
         private val SWIPE_THRESHOLD = 100
         private val SWIPE_VELOCITY_THRESHOLD = 100
 
@@ -93,18 +83,11 @@ class SplashActivity : AppCompatActivity() {
             return true
         }
 
-        override fun onFling(
-            e1: MotionEvent?,
-            e2: MotionEvent,
-            velocityX: Float,
-            velocityY: Float
-        ): Boolean {
+        override fun onFling(e1: MotionEvent?, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
             if (e1 == null) return false
-
             val diffY = e2.y - e1.y
             val diffX = e2.x - e1.x
 
-            // Comprovem que el moviment sigui vertical i prou ràpid
             if (abs(diffY) > abs(diffX)) {
                 if (abs(diffY) > SWIPE_THRESHOLD && abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
                     if (diffY > 0) {
@@ -119,20 +102,16 @@ class SplashActivity : AppCompatActivity() {
         }
     }
 
-    // --- ACCIONS DE NAVEGACIÓ (EXISTENTS) ---
-
     private fun onSwipeUp() {
         Log.i("MERCH_APP", "Gesture: Swipe UP -> Anant a Streamer Login")
-        Toast.makeText(this, "Mode Creador", Toast.LENGTH_SHORT).show()
-
+        Toast.makeText(this, getString(R.string.mode_creator), Toast.LENGTH_SHORT).show()
         val intent = Intent(this, StreamerLoginActivity::class.java)
         startActivity(intent)
     }
 
     private fun onSwipeDown() {
         Log.i("MERCH_APP", "Gesture: Swipe DOWN -> Anant a Viewer Login")
-        Toast.makeText(this, "Mode Espectador", Toast.LENGTH_SHORT).show()
-
+        Toast.makeText(this, getString(R.string.mode_viewer), Toast.LENGTH_SHORT).show()
         val intent = Intent(this, ViewerLoginActivity::class.java)
         startActivity(intent)
     }
