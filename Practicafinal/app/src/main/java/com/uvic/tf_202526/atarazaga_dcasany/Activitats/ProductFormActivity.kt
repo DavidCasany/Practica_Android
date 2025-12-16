@@ -42,16 +42,15 @@ class ProductFormActivity : AppCompatActivity() {
     private var streamerId: Int = -1
     private var productIdToEdit: Int = -1
 
-    // LAUNCHER CÀMERA (Corregit per utilitzar la ruta File)
     private val cameraLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success) {
             currentTempPhotoPath?.let { tempPath ->
                 lifecycleScope.launch(Dispatchers.IO) {
 
-                    // 1. Copiem el fitxer des de la ruta absoluta temporal a la ruta persistent
+
                     val localPathString = copyFileToLocalFile(tempPath)
 
-                    // 2. Si la còpia ha anat bé, carreguem la imatge al Main Thread
+
                     withContext(Dispatchers.Main) {
                         if (localPathString != null) {
                             currentPhotoUri = Uri.fromFile(File(localPathString))
@@ -80,11 +79,10 @@ class ProductFormActivity : AppCompatActivity() {
                 }
             }
         }
-        // Netejar la referència a la ruta temporal
+
         currentTempPhotoPath = null
     }
 
-    // LAUNCHER GALERIA (Manté la lògica original de ContentResolver)
     private val galleryLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
             lifecycleScope.launch(Dispatchers.IO) {
@@ -112,10 +110,10 @@ class ProductFormActivity : AppCompatActivity() {
                             ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
                         }
 
-                        // TEXT TRADUÏT
+
                         Toast.makeText(this@ProductFormActivity, getString(R.string.msg_gallery_saved), Toast.LENGTH_SHORT).show()
                     } else {
-                        // TEXT TRADUÏT
+
                         Toast.makeText(this@ProductFormActivity, getString(R.string.msg_gallery_error), Toast.LENGTH_LONG).show()
                     }
                 }
@@ -148,7 +146,7 @@ class ProductFormActivity : AppCompatActivity() {
         val cbOferta = findViewById<CheckBox>(R.id.cb_es_oferta)
         val etPreuOferta = findViewById<EditText>(R.id.et_preu_oferta)
 
-        // Lògica CheckBox: Si es marca, s'activa el camp de preu oferta
+
         cbOferta.setOnCheckedChangeListener { _, isChecked ->
             etPreuOferta.isEnabled = isChecked
         }
@@ -182,7 +180,7 @@ class ProductFormActivity : AppCompatActivity() {
                             etPreuOferta.setText("")
                         }
 
-                        // +++ CARREGAR IMATGE EXISTENT (Lògica mantinguda) +++
+
                         if (!prod.imatgeUri.isNullOrEmpty()) {
                             lifecycleScope.launch(Dispatchers.IO) {
                                 try {
@@ -225,7 +223,7 @@ class ProductFormActivity : AppCompatActivity() {
                             ivPreview.setImageResource(android.R.drawable.ic_menu_camera)
                         }
                     } else {
-                        // Si l'ID d'edició falla...
+
                         productIdToEdit = -1
                         tvTitleForm.text = getString(R.string.title_new_product)
                         btnGuardar.text = getString(R.string.btn_save_product)
@@ -233,12 +231,12 @@ class ProductFormActivity : AppCompatActivity() {
                 }
             }
         } else {
-            // TEXT TRADUÏT
+
             tvTitleForm.text = getString(R.string.title_new_product)
             etPreuOferta.isEnabled = false
         }
 
-        // --- BOTONS CÀMERA / GALERIA ---
+
         btnCamera.setOnClickListener {
             if (checkCameraPermission()) obrirCamera() else requestCameraPermission()
         }
@@ -247,7 +245,7 @@ class ProductFormActivity : AppCompatActivity() {
             galleryLauncher.launch("image/*")
         }
 
-        // --- GUARDAR (INSERT o UPDATE) ---
+
         btnGuardar.setOnClickListener {
             val nom = etNom.text.toString()
             val preuStr = etPreu.text.toString()
@@ -259,13 +257,13 @@ class ProductFormActivity : AppCompatActivity() {
             if (nom.isNotEmpty() && preuStr.isNotEmpty()) {
                 val preu = preuStr.toDoubleOrNull() ?: 0.0
                 if (preu <= 0.0) {
-                    // TEXT TRADUÏT
+
                     Toast.makeText(this, getString(R.string.error_price_zero), Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
 
                 if (esOferta && preuOferta >= preu) {
-                    // TEXT TRADUÏT
+
                     Toast.makeText(this, getString(R.string.error_offer_price_invalid), Toast.LENGTH_LONG).show()
                     return@setOnClickListener
                 }
@@ -294,19 +292,17 @@ class ProductFormActivity : AppCompatActivity() {
                     }
 
                     withContext(Dispatchers.Main) {
-                        // TEXT TRADUÏT
+
                         Toast.makeText(this@ProductFormActivity, getString(missatgeId), Toast.LENGTH_SHORT).show()
                         finish()
                     }
                 }
             } else {
-                // TEXT TRADUÏT
                 Toast.makeText(this, getString(R.string.error_required_fields), Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    // Funció per copiar la imatge des d'una URI content:// (ús Galeria)
     private fun copyUriToLocalFile(originalUri: Uri): String? {
         val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val fileName = "prod_${streamerId}_${timeStamp}.jpg"
@@ -325,7 +321,7 @@ class ProductFormActivity : AppCompatActivity() {
         return null
     }
 
-    // --- FUNCIONS AUXILIARS CÀMERA ---
+
 
     private fun checkCameraPermission(): Boolean {
         return ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
@@ -354,7 +350,6 @@ class ProductFormActivity : AppCompatActivity() {
         }
     }
 
-    // Funció per COPIAR la imatge des d'una RUTA ABSOLUTA (ús Càmera)
     private fun copyFileToLocalFile(sourcePath: String): String? {
         val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val sourceFile = File(sourcePath)

@@ -33,7 +33,7 @@ class ProductDetailActivity : AppCompatActivity() {
         userId = intent.getIntExtra("USER_ID", -1)
 
         if (productId == -1 || userId == -1) {
-            // TEXT TRADUÏT
+
             Toast.makeText(this, getString(R.string.error_product_not_found_session), Toast.LENGTH_LONG).show()
             finish()
             return
@@ -56,7 +56,7 @@ class ProductDetailActivity : AppCompatActivity() {
                     title = producte.nom
                     mostrarDadesProducte(producte)
                 } ?: run {
-                    // TEXT TRADUÏT
+
                     Toast.makeText(this@ProductDetailActivity, getString(R.string.msg_product_not_found), Toast.LENGTH_SHORT).show()
                     finish()
                 }
@@ -110,10 +110,10 @@ class ProductDetailActivity : AppCompatActivity() {
 
             if (itemExistent != null) {
                 AppSingleton.getInstance().db.carroDao().updateQuantitat(itemExistent.id, itemExistent.quantitat + 1)
-                missatgeId = R.string.msg_unit_added // TEXT TRADUÏT
+                missatgeId = R.string.msg_unit_added
             } else {
                 AppSingleton.getInstance().db.carroDao().insertItem(itemCarro)
-                missatgeId = R.string.msg_product_added // TEXT TRADUÏT
+                missatgeId = R.string.msg_product_added
             }
 
             withContext(Dispatchers.Main) {

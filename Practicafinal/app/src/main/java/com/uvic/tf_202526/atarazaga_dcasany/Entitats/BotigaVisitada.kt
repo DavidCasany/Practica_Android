@@ -10,11 +10,11 @@ data class BotigaVisitada(
     val id: Int = 0,
 
     @ColumnInfo(name = "id_espectador")
-    val idEspectador: Int, // L'ID de l'usuari que està mirant l'app
+    val idEspectador: Int,
 
     @ColumnInfo(name = "id_streamer")
-    val idStreamer: Int,   // L'ID del creador de la botiga visitada
+    val idStreamer: Int,
 
     @ColumnInfo(name = "data_visita")
-    val dataVisita: Long = System.currentTimeMillis() // Opcional: per ordenar per "més recents"
+    val dataVisita: Long = System.currentTimeMillis()
 )

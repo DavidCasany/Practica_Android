@@ -10,7 +10,7 @@ data class Producte(
     val pid: Int = 0,
 
     @ColumnInfo(name = "nom")
-    var nom: String, // 'var' per si voleu editar-lo després
+    var nom: String,
 
     @ColumnInfo(name = "descripcio")
     var descripcio: String,
@@ -21,18 +21,18 @@ data class Producte(
     @ColumnInfo(name = "imatge_uri")
     var imatgeUri: String?,
 
-    // --- NOUS CAMPS PER A OFERTES (Dev B) ---
+
     @ColumnInfo(name = "es_oferta")
     var esOferta: Boolean = false,
 
     @ColumnInfo(name = "preu_oferta")
     var preuOferta: Double = 0.0,
 
-    // --- CAMP PER VINCULAR AMB STREAMER ---
+
     @ColumnInfo(name = "id_creador")
     val idCreador: Int
 ) {
-    // Propietat calculada per saber què cobrar (per al Carro)
+
     val preuFinal: Double
         get() = if (esOferta && preuOferta > 0.0) preuOferta else preu
 }

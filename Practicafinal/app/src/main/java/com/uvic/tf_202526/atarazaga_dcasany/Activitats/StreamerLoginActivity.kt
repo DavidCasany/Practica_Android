@@ -25,7 +25,6 @@ class StreamerLoginActivity : AppCompatActivity() {
         val btnLogin = findViewById<Button>(R.id.btn_login)
         val btnRegistre = findViewById<Button>(R.id.btn_registre)
 
-        // --- LOGIN STREAMER ---
         btnLogin.setOnClickListener {
             val nom = etNom.text.toString()
             val pass = etPass.text.toString()
@@ -51,7 +50,7 @@ class StreamerLoginActivity : AppCompatActivity() {
             }
         }
 
-        // --- REGISTRE STREAMER ---
+
         btnRegistre.setOnClickListener {
             val nom = etNom.text.toString()
             val pass = etPass.text.toString()
@@ -61,7 +60,7 @@ class StreamerLoginActivity : AppCompatActivity() {
                     val dao = AppSingleton.getInstance().db.usuariDao()
 
                     if (dao.getUsuariByNom(nom) == null) {
-                        // Creem i afegim el nou streamer
+
                         val nouStreamer = Usuari(nom = nom, contrasenya = pass, esStreamer = true)
                         dao.addUsuari(nouStreamer)
 

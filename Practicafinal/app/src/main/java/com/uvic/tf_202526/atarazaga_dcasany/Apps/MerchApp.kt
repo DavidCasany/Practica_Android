@@ -6,7 +6,7 @@ class MerchApp : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        // Inicialitzem la Base de Dades
+
         AppSingleton.Companion.getInstance().init(this)
     }
 }

@@ -9,35 +9,35 @@ import com.uvic.tf_202526.atarazaga_dcasany.Entitats.Producte
 import com.uvic.tf_202526.atarazaga_dcasany.Entitats.Usuari
 import com.uvic.tf_202526.atarazaga_dcasany.Entitats.ItemCarro
 
-// 1. Definim les taules (Entitats) i la versió de la BD
+
 @Database(
     entities = [Usuari::class, Producte::class, ItemCarro::class, BotigaVisitada::class],
-    version = 2, // <--- CANVI CLAU: INCREMENTEM LA VERSIÓ
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
 
-    // 2. Exposem els DAOs (perquè puguem fer servir les operacions)
+
     abstract fun usuariDao(): UsuariDao
     abstract fun producteDao(): ProducteDao
     abstract fun botigaVisitadaDao(): BotigaVisitadaDao
 
     abstract fun carroDao(): CarroDao
 
-    // 3. Patró Singleton (per obrir la BD una sola vegada)
+
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
         fun getDatabase(context: Context): AppDatabase {
-            // Si la instància ja existeix, la retornem. Si no, la creem.
+
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "merchstream_database" // Nom del fitxer físic al mòbil
+                    "merchstream_database"
                 )
-                    .fallbackToDestructiveMigration() // Opcional: Si canvies la BD, esborra l'antiga per evitar errors en dev
+                    .fallbackToDestructiveMigration()
                     .build()
 
                 INSTANCE = instance

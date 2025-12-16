@@ -1,17 +1,16 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    // AFEGIT: Plugin necessari per a Room (Base de Dades)
     alias(libs.plugins.kotlin.kapt)
 }
 
 android {
     namespace = "com.uvic.tf_202526.atarazaga_dcasany"
-    compileSdk = 34 // Recomanat: fer servir 34 (UpsideDownCake) o 35, el 36 és molt nou (beta)
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.uvic.tf_202526.atarazaga_dcasany"
-        minSdk = 24
+        minSdk = 23
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -38,7 +37,7 @@ android {
 }
 
 dependencies {
-    // Llibreries per defecte
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -48,17 +47,15 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
-    // --- AFEGITS DEL PLA DE TREBALL ---
 
-    // ROOM (Base de Dades) - Sessió 12
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
-    kapt(libs.room.compiler) // Processador d'anotacions
+    kapt(libs.room.compiler)
 
-    // GSON (JSON) - Sessió 12
+
     implementation(libs.gson)
 
-    // QR (ZXing) - Sessió 11
+
     implementation(libs.zxing.embedded)
     implementation(libs.zxing.core)
 }

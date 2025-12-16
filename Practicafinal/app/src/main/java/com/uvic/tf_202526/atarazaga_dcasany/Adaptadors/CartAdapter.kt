@@ -27,7 +27,7 @@ class CartAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CartViewHolder {
-        // Ara fem servir el nostre layout nou 'item_cart'
+
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_cart, parent, false)
         return CartViewHolder(view)
     }
@@ -37,13 +37,13 @@ class CartAdapter(
 
         holder.tvNom.text = item.nomProducte
 
-        // Usem la nostra nova propietat calculada 'preuUnitariFinal'
+
         val textPreu = "${item.quantitat} x ${item.preuUnitariFinal}€ = ${item.preuTotal}€"
 
-        // Opcional: Afegir un indicador si és oferta
+
         if (item.esOferta && item.preuOferta > 0) {
             holder.tvInfo.text = "$textPreu (OFERTA!)"
-            holder.tvInfo.setTextColor(android.graphics.Color.RED) // Destaquem-ho en vermell
+            holder.tvInfo.setTextColor(android.graphics.Color.RED)
         } else {
             holder.tvInfo.text = textPreu
             holder.tvInfo.setTextColor(android.graphics.Color.GRAY)

@@ -25,7 +25,7 @@ class ProducteAdapter(
     }
 
     class ProducteViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        // Corregim les IDs (estan basades en el nou item_producte.xml)
+
         val ivImage: ImageView = view.findViewById(R.id.iv_producte_imatge)
         val tvNom: TextView = view.findViewById(R.id.tv_producte_nom)
         val tvPreu: TextView = view.findViewById(R.id.tv_producte_preu)
@@ -39,11 +39,11 @@ class ProducteAdapter(
 
     override fun onBindViewHolder(holder: ProducteViewHolder, position: Int) {
         val producte = llista[position]
-        val df = DecimalFormat("#,##0.00€") // Utilitzem java.text
+        val df = DecimalFormat("#,##0.00€")
 
         holder.tvNom.text = producte.nom
 
-        // Lògica d'Oferta (igual que abans, utilitzant el nou camp tv_producte_es_oferta)
+
         if (producte.esOferta && producte.preuOferta > 0.0) {
             holder.tvPreu.text = df.format(producte.preuOferta)
             holder.tvOferta.visibility = View.VISIBLE
@@ -52,7 +52,7 @@ class ProducteAdapter(
             holder.tvOferta.visibility = View.GONE
         }
 
-        // Lògica de càrrega d'imatge (hauria de ser consistent amb altres llocs)
+
         if (!producte.imatgeUri.isNullOrEmpty()) {
             try {
                 holder.ivImage.setImageURI(Uri.parse(producte.imatgeUri))

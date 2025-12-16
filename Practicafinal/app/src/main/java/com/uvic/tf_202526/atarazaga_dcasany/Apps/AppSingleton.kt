@@ -19,7 +19,7 @@ class AppSingleton private constructor() {
         }
     }
 
-    // Aquest mètode es cridarà només una vegada al principi
+
     fun init(context: Context) {
         db = AppDatabase.Companion.getDatabase(context)
     }

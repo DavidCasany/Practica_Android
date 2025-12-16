@@ -17,17 +17,17 @@ class CreatorProductAdapter(
 ) : RecyclerView.Adapter<CreatorProductAdapter.CreatorViewHolder>() {
 
     interface OnCreatorClickListener {
-        fun onEditClick(producte: Producte)   // Clic a la foto/nom -> Editar
-        fun onDeleteClick(producte: Producte) // Clic al botó -> Esborrar
+        fun onEditClick(producte: Producte)
+        fun onDeleteClick(producte: Producte)
     }
 
     class CreatorViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val ivImatge: ImageView = itemView.findViewById(R.id.iv_producte_imatge) // FIX ID
-        val tvNom: TextView = itemView.findViewById(R.id.tv_producte_nom) // FIX ID
-        val tvPreuFinal: TextView = itemView.findViewById(R.id.tv_producte_preu) // FIX ID (Preu final)
-        val tvOfertaTag: TextView = itemView.findViewById(R.id.tv_producte_es_oferta) // NOU TAG OFERTA
+        val ivImatge: ImageView = itemView.findViewById(R.id.iv_producte_imatge)
+        val tvNom: TextView = itemView.findViewById(R.id.tv_producte_nom)
+        val tvPreuFinal: TextView = itemView.findViewById(R.id.tv_producte_preu)
+        val tvOfertaTag: TextView = itemView.findViewById(R.id.tv_producte_es_oferta)
 
-        // Eliminem la referència al botó i al preu d'oferta que ja no existeixen al layout.
+
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CreatorViewHolder {
@@ -39,38 +39,36 @@ class CreatorProductAdapter(
     override fun onBindViewHolder(holder: CreatorViewHolder, position: Int) {
         val prod = llista[position]
 
-        // 1. Dades de Text
+
         holder.tvNom.text = prod.nom
 
-        // LÒGICA DE PREU: Utilitzem el preu final (oferta o normal)
+
         val preuMostrar = if (prod.esOferta && prod.preuOferta > 0.0) prod.preuOferta else prod.preu
         holder.tvPreuFinal.text = "${preuMostrar} €"
 
-        // Etiqueta OFERTA (visible/invisible)
         holder.tvOfertaTag.visibility = if (prod.esOferta && prod.preuOferta > 0.0) View.VISIBLE else View.GONE
 
-        // 2. Imatge
+
         if (!prod.imatgeUri.isNullOrEmpty()) {
             try {
                 holder.ivImatge.setImageURI(Uri.parse(prod.imatgeUri))
             } catch (e: Exception) {
-                // Codi a prova de crash si la URI és invàlida
+
                 holder.ivImatge.setImageResource(android.R.color.darker_gray)
             }
         } else {
             holder.ivImatge.setImageResource(android.R.color.darker_gray)
         }
 
-        // 3. LISTENERS
-        // Clic NORMAL: Obre el formulari d'Edició
+
         holder.itemView.setOnClickListener {
             listener.onEditClick(prod)
         }
 
-        // Clic LLARG: Obre el diàleg per Esborrar
+
         holder.itemView.setOnLongClickListener {
             listener.onDeleteClick(prod)
-            true // Retornem true per consumir l'esdeveniment i evitar que es propagui
+            true
         }
     }
 

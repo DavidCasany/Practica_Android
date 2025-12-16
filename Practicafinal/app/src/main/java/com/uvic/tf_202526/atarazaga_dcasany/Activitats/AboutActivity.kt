@@ -9,7 +9,6 @@ class AboutActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_about)
 
-        // Opcional: Amagar la barra superior per veure millor el disseny
         supportActionBar?.hide()
     }
 }

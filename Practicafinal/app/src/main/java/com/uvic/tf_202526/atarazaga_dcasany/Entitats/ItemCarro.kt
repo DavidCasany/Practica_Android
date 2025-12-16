@@ -16,5 +16,5 @@ data class ItemCarro(
     val idProducte: Int,
 
     @ColumnInfo(name = "quantitat")
-    var quantitat: Int = 1 // <--- CORRECCIÓ CLAU: Ara és 'var'
+    var quantitat: Int = 1
 )

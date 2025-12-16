@@ -31,19 +31,19 @@ class StoreActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_store)
 
-        // 1. RECOLLIR IDENTIFICADORS
+
         streamerId = intent.getIntExtra("STREAMER_ID", -1)
         val prefs = getSharedPreferences("MerchStreamPrefs", MODE_PRIVATE)
         userId = prefs.getInt("USER_ID", -1)
 
         if (streamerId == -1 || userId == -1) {
-            // TEXT TRADUÏT
+
             Toast.makeText(this, getString(R.string.error_invalid_session_data), Toast.LENGTH_SHORT).show()
             finish()
             return
         }
 
-        // 2. CONFIGURAR VISTA
+
         ivBanner = findViewById(R.id.iv_store_banner)
         rvProductes = findViewById(R.id.rv_store_products)
         rvProductes.layoutManager = GridLayoutManager(this, 2)
@@ -53,7 +53,6 @@ class StoreActivity : AppCompatActivity() {
             startActivity(Intent(this, CartActivity::class.java))
         }
 
-        // 3. CARREGAR DADES
         carregarInfoStreamer()
         carregarProductes()
     }
@@ -64,7 +63,6 @@ class StoreActivity : AppCompatActivity() {
 
             withContext(Dispatchers.Main) {
                 if (streamer != null) {
-                    // TEXT TRADUÏT amb format
                     title = getString(R.string.shop_title_format, streamer.nom)
 
                     val bannerUri = streamer.bannerUri
@@ -121,7 +119,6 @@ class StoreActivity : AppCompatActivity() {
             }
 
             withContext(Dispatchers.Main) {
-                // TEXT TRADUÏT amb variable
                 Toast.makeText(this@StoreActivity, getString(R.string.msg_added_to_cart_format, producte.nom), Toast.LENGTH_SHORT).show()
             }
         }

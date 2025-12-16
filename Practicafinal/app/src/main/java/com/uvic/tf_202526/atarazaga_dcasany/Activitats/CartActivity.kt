@@ -30,7 +30,6 @@ class CartActivity : AppCompatActivity() {
 
     private var llistaCompra: List<CartItemDisplay> = emptyList()
 
-    // Utilitzem el recurs 'euro_suffix' per a consistència
     private val df by lazy { DecimalFormat("#,##0.00${getString(R.string.euro_suffix)}") }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -87,7 +86,6 @@ class CartActivity : AppCompatActivity() {
                     tvTotal.text = df.format(0.0)
                     tvSubtotal.text = df.format(0.0)
                     tvSubtotalLabel.visibility = View.GONE
-                    // TEXT TRADUÏT
                     Toast.makeText(this@CartActivity, getString(R.string.msg_cart_empty), Toast.LENGTH_SHORT).show()
                 }
             }
@@ -116,13 +114,12 @@ class CartActivity : AppCompatActivity() {
         val total = llistaCompra.sumOf { it.preuTotal }
 
         if (total <= 0.0) {
-            // TEXT TRADUÏT
             Toast.makeText(this, getString(R.string.error_pay_empty), Toast.LENGTH_SHORT).show()
             return
         }
 
         AlertDialog.Builder(this)
-            // TEXTOS TRADUÏTS
+
             .setTitle(getString(R.string.payment_title))
             .setMessage(getString(R.string.payment_msg_format, df.format(total)))
             .setIcon(android.R.drawable.ic_dialog_info)
@@ -134,7 +131,7 @@ class CartActivity : AppCompatActivity() {
     }
 
     private fun processarPagament(total: Double) {
-        // TEXT TRADUÏT
+
         Toast.makeText(this, getString(R.string.msg_connecting_bank), Toast.LENGTH_SHORT).show()
 
         lifecycleScope.launch(Dispatchers.IO) {
@@ -143,7 +140,7 @@ class CartActivity : AppCompatActivity() {
             Thread.sleep(1500)
 
             withContext(Dispatchers.Main) {
-                // TEXT TRADUÏT
+
                 Toast.makeText(this@CartActivity, getString(R.string.msg_payment_success_format, df.format(total)), Toast.LENGTH_LONG).show()
 
                 llistaCompra = emptyList()

@@ -25,7 +25,7 @@ class ViewerLoginActivity : AppCompatActivity() {
         val btnLogin = findViewById<Button>(R.id.btn_login)
         val btnRegistre = findViewById<Button>(R.id.btn_registre)
 
-        // --- LOGIN ---
+
         btnLogin.setOnClickListener {
             val nom = etNom.text.toString()
             val pass = etPass.text.toString()
@@ -51,7 +51,7 @@ class ViewerLoginActivity : AppCompatActivity() {
             }
         }
 
-        // --- REGISTRE ---
+
         btnRegistre.setOnClickListener {
             val nom = etNom.text.toString()
             val pass = etPass.text.toString()
