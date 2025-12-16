@@ -27,4 +27,6 @@ interface BotigaVisitadaDao {
 
     @Query("SELECT EXISTS(SELECT * FROM botigues_visitades_table WHERE id_espectador = :userId AND id_streamer = :streamerId)")
     suspend fun jaLaTinc(userId: Int, streamerId: Int): Boolean
+
+
 }

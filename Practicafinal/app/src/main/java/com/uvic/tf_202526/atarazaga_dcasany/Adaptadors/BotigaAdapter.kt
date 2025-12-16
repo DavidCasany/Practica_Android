@@ -1,5 +1,6 @@
 package com.uvic.tf_202526.atarazaga_dcasany.Adaptadors
 
+import android.icu.text.SimpleDateFormat
 import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
@@ -11,7 +12,7 @@ import com.uvic.tf_202526.atarazaga_dcasany.Entitats.BotigaDisplay
 import com.uvic.tf_202526.atarazaga_dcasany.R
 import java.util.Date
 import java.util.Locale
-import java.text.SimpleDateFormat
+
 
 
 
